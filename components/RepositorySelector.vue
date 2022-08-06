@@ -28,6 +28,7 @@
         
         <b-form-input v-else
           id="acctInput"
+          autocapitalize="off"
           placeholder="Enter user or account"
           @keyup="acctInputHandler"
           :value="selectedAcct"
@@ -91,9 +92,9 @@ export default Vue.extend({
     },
     
     async acctInputHandler() {
-      let acctStr = (document.getElementById('acctInput') as HTMLInputElement).value
-      this.repositories = acctStr
-        ? await this.getRepositories(acctStr)
+      this.selectedAcct = (document.getElementById('acctInput') as HTMLInputElement).value
+      this.repositories = this.selectedAcct
+        ? await this.getRepositories(this.selectedAcct)
         : []
       this.selectedRepo = this.repositories.length
         ? (this.repositories.find((repo:any) => repo.name.toLowerCase() === 'images') || this.repositories[0]).name
@@ -110,6 +111,7 @@ export default Vue.extend({
 
     submit() {
       (this as any).$bvModal.hide('repository-selector')
+      console.log(`submit: selectedAcct=${this.selectedAcct} selectedRepo=${this.selectedRepo}`)
       this.$store.commit('setAcct', this.selectedAcct)
       this.$store.commit('setRepo', this.selectedRepo)
       this.$store.commit('setPath', '')

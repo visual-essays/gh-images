@@ -1,8 +1,11 @@
 <template>
 <div>
   <b-navbar ref="navbar" fixed="top" toggleable="lg" type="dark" variant="primary">
+    <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+
     <b-navbar-brand to="/">Github Images</b-navbar-brand>
     
+
     <div class="repo-selector" v-if="acct" 
       v-b-modal.repository-selector 
       v-b-tooltip.hover title="Select Repository">
@@ -13,6 +16,7 @@
       <div class="repo-selector" v-b-modal.repository-selector>Select Repository</div>
     </div>
     
+
     <b-collapse id="nav-collapse" is-nav>
       <!-- Inline nav items -->
       <b-navbar-nav>
@@ -63,6 +67,10 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+   .navbar-toggler {
+    padding: 0.25rem 0;
+   }
+
   .repo-selector {
     cursor: pointer;
     color: white;
