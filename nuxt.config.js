@@ -33,7 +33,8 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
-    '~/plugins/wc-plugin.js'
+    '~/plugins/wc-plugin.js',
+    { src: '@/plugins/auth-token.js', ssr: false },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

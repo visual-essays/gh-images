@@ -13,9 +13,11 @@
   },
   "dependencies": {
     "@nuxtjs/pwa": "^3.3.5",
+    "@types/lodash": "^4.14.182",
     "bootstrap": "^4.6.1",
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.19.3",
+    "lodash": "^4.17.21",
     "nuxt": "^2.15.8",
     "visual-essays": "^0.2.53",
     "vue": "^2.6.14",

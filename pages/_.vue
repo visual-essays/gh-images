@@ -1,5 +1,6 @@
 <template>
   <div>
+    <app-header></app-header>
 
     <div class="breadCrumbs">
       <template v-for="item, idx in breadCrumbs">
@@ -9,10 +10,10 @@
       </template>
     </div>
 
-    <div v-if="dirs.length > 0">
+    <div>
       <span class="dir" v-for="dir, idx in dirs" :key="`dir-${idx}`">
         <NuxtLink :to="dir">
-        <span v-html="dir.split('/').pop()"></span>
+          <span v-html="dir.split('/').pop()"></span>
         </NuxtLink>
       </span>
     </div>
@@ -39,17 +40,18 @@ const ignore = new Set(['iiif-props.yaml', 'iiif-props.template.yaml'])
 export default Vue.extend({
   name: 'IndexPage',
   data: () => ({
+    root: '',
     baseUrl: '',
-    acct: '',
-    repo: '',
-    path: '',
     dirs: <string[]>[],
     manifests: <any[]>[],
     viewerWindow: null
   }),
   computed: {
-    root() {return this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : null},
-    breadCrumbs() {
+    acct(): string {return this.$store.state.acct},
+    repo(): string {return this.$store.state.repo},
+    path(): string {return this.$store.state.path},
+    // root(): string {return this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : ''},
+    breadCrumbs(): any[] {
       let breadCrumbs = [{label: 'root', href: `/${this.acct}/${this.repo}`}]
       let pathElems = this.path.split('/').filter(pe => pe)
       for (let i = 0; i < pathElems.length; i++) {
@@ -60,41 +62,55 @@ export default Vue.extend({
   },
   async created() {console.log('created')},
   async mounted() {
-    let pathElems = location.pathname.split('/').filter(pe => pe)
-    this.path = pathElems.length > 2 ? pathElems.slice(2).join('/') : ''
-    this.acct = pathElems.length > 0 ? pathElems[0] : ''
-    this.repo = pathElems.length > 1 ? pathElems[1] : ''
+    console.log(this.$route)
+    let pathElems = this.$route.path.split('/').filter(pe => pe)
+    this.$store.commit('setPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
+    if (pathElems.length > 0) this.$store.commit('setAcct', pathElems[0])
+    if (pathElems.length > 1) this.$store.commit('setRepo', pathElems[1])
     this.baseUrl = location.origin
-    console.log(`acct=${this.acct} repo=${this.repo} path=${this.path} baseUrl=${this.baseUrl}`)
+    this.root = this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : ''
+    console.log(`${this.$options.name}.mounted acct=${this.acct} repo=${this.repo} path=${this.path} baseUrl=${this.baseUrl} root=${this.root}`)
+    if (this.acct && this.repo) window.history.replaceState({}, '', `/${this.root}`)
   },
-  methods: {},
+  methods: {
+    async listContents() {
+      let url = `${api}/dir/${this.root}/`
+      console.log(url)
+      await fetch(`${api}/dir/${this.root}/`).then(resp => resp.json())
+      .then(items => {
+        console.log('items', items)
+        let manifests = new Set()
+        let dirs: string[] = []
+        items.forEach((item:any) => {
+          if (item.type === 'dir') {
+            dirs.push(`/${this.root}/${item.name}`)
+          } else {
+            if (!ignore.has(item.name)) {
+              let elems = item.name.split('.')
+              let name = elems.slice(0,-1).join('.')
+              let extension = elems.pop().toLowerCase()
+              if (fileExtensions.has(extension)) {                
+                manifests.add(`${iiifServer}/gh:${this.root}/${encodeURIComponent(name)}/manifest.json`)
+              }
+            }
+          }
+        })
+        this.dirs = dirs
+        this.manifests = Array.from(manifests).sort()
+      })     
+    }
+  },
   watch: {
     root: {
       async handler(root) {
-        await fetch(`${api}/dir/${this.root}/`).then(resp => resp.json())
-        .then(items => {
-          console.log(items)
-          let manifests = new Set()
-          let dirs: string[] = []
-          items.forEach((item:any) => {
-            if (item.type === 'dir') {
-              dirs.push(`/${this.root}/${item.name}`)
-            } else {
-              if (!ignore.has(item.name)) {
-                let elems = item.name.split('.')
-                let name = elems.slice(0,-1).join('.')
-                let extension = elems.pop().toLowerCase()
-                if (fileExtensions.has(extension)) {                
-                  manifests.add(`${iiifServer}/gh:${this.root}/${encodeURIComponent(name)}/manifest.json`)
-                }
-              }
-            }
-          })
-          this.dirs = dirs
-          this.manifests = Array.from(manifests).sort()
-        })     
-      },
-      immediate: false
+        console.log(`root=${root}`)
+        if (root) this.listContents()
+     },
+      immediate: true
+    },
+
+    dirs(dirs) {
+      console.log('dirs', dirs)
     }
   }
 })
