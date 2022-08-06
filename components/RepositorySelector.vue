@@ -87,7 +87,6 @@ export default Vue.extend({
     },
     
     async getRepositories(acct:string): Promise<string[]> {
-      console.log('getRepositories', acct)
       return this.githubClient.repos(acct)
     },
     
@@ -111,7 +110,6 @@ export default Vue.extend({
 
     submit() {
       (this as any).$bvModal.hide('repository-selector')
-      console.log(`submit: selectedAcct=${this.selectedAcct} selectedRepo=${this.selectedRepo}`)
       this.$store.commit('setAcct', this.selectedAcct)
       this.$store.commit('setRepo', this.selectedRepo)
       this.$store.commit('setPath', '')
@@ -123,7 +121,6 @@ export default Vue.extend({
   watch: {
     
     mode(mode) {
-      console.log(`mode=${this.mode}`)
       if (mode === 'mine') this.getMyRepositories()
     },
 

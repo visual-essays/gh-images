@@ -60,9 +60,8 @@ export default Vue.extend({
       return breadCrumbs
     }
   },
-  async created() {console.log('created')},
+  async created() {},
   async mounted() {
-    console.log(this.$route)
     let pathElems = this.$route.path.split('/').filter(pe => pe)
     this.$store.commit('setPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
     if (pathElems.length > 0) this.$store.commit('setAcct', pathElems[0])
@@ -75,10 +74,8 @@ export default Vue.extend({
   methods: {
     async listContents() {
       let url = `${api}/dir/${this.root}/`
-      console.log(url)
       await fetch(`${api}/dir/${this.root}/`).then(resp => resp.json())
       .then(items => {
-        console.log('items', items)
         let manifests = new Set()
         let dirs: string[] = []
         items.forEach((item:any) => {
@@ -103,14 +100,9 @@ export default Vue.extend({
   watch: {
     root: {
       async handler(root) {
-        console.log(`root=${root}`)
         if (root) this.listContents()
      },
       immediate: true
-    },
-
-    dirs(dirs) {
-      console.log('dirs', dirs)
     }
   }
 })
