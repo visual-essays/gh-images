@@ -2,27 +2,20 @@
   <div>
     <app-header></app-header>
 
-    <div class="breadCrumbs">
-      <template v-for="item, idx in breadCrumbs">
-        <NuxtLink :to="item.href">
-          <span :key="`breadCrumb-${idx}`" v-html="item.label"></span>
-        </NuxtLink>
-      </template>
-    </div>
+    <b-breadcrumb :items="breadCrumbs"></b-breadcrumb>
 
-    <div>
-      <span class="dir" v-for="dir, idx in dirs" :key="`dir-${idx}`">
-        <NuxtLink :to="dir">
-          <span v-html="dir.split('/').pop()"></span>
-        </NuxtLink>
-      </span>
-    </div>
+    <b-button-group size="sm" class="dir">
+      <b-button v-for="dir in dirs" :key="dir" v-html="dir.split('/').pop()" :to="dir" pill></b-button>
+    </b-button-group>
 
     <ve-image-grid as-cards >
       <ul>
         <li v-for="manifest, idx in manifests" :key="`grid-${idx}`" v-html="manifest"></li>
       </ul>
     </ve-image-grid>
+
+    <b-button pill class="fab" variant="primary" v-b-modal.add-image>+</b-button>
+    <add-image-dialog></add-image-dialog>
 
   </div>
 </template>
@@ -50,12 +43,11 @@ export default Vue.extend({
     acct(): string {return this.$store.state.acct},
     repo(): string {return this.$store.state.repo},
     path(): string {return this.$store.state.path},
-    // root(): string {return this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : ''},
     breadCrumbs(): any[] {
-      let breadCrumbs = [{label: 'root', href: `/${this.acct}/${this.repo}`}]
+      let breadCrumbs = [{text: 'root', to: `/${this.acct}/${this.repo}`}]
       let pathElems = this.path.split('/').filter(pe => pe)
       for (let i = 0; i < pathElems.length; i++) {
-        breadCrumbs.push({label: pathElems[i] ,href: `/${this.acct}/${this.repo}/${pathElems.slice(0,i+1).join('/')}`})
+        breadCrumbs.push({text: pathElems[i], to: `/${this.acct}/${this.repo}/${pathElems.slice(0,i+1).join('/')}`})
       }
       return breadCrumbs
     }
@@ -103,7 +95,12 @@ export default Vue.extend({
         if (root) this.listContents()
      },
       immediate: true
+    },
+
+    manifests(manifests) {
+      console.log(`manifests=${manifests.length}`)
     }
+  
   }
 })
 
@@ -132,22 +129,28 @@ export default Vue.extend({
     font-weight: bold;
   }
   
-  .breadCrumbs {
-    display: flex;
-    gap: 12px;
+  .breadcrumb {
+    margin-bottom: 0;
+    padding: .5rem;
   }
   
-  .dir {
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 90%;
-    margin-bottom: 6px;
-    margin-right: 12px;
+  .dir.btn-group {
+    width: 100%;
+    background-color: #e9ecef;
   }
-    
-    ve-image-grid {
-      margin: 24px 0;
-    }
+  .dir.btn-group .btn {
+    color: black;
+    background-color: white;
+    margin: 0 0 .5rem .5rem;
+    flex: none;
+  }
+
+  .fab {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
 
 </style>

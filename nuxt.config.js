@@ -17,6 +17,10 @@ export default {
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
       { rel: 'stylesheet', href: 'https://unpkg.com/visual-essays@0.2.53/dist/visual-essays/visual-essays.css' }
+    ],
+    script: [
+      // { src: 'http://localhost:3333/build/visual-essays.esm.js', type: 'module' }
+      // { src: 'https://unpkg.com/visual-essays@0.2.53/dist/visual-essays/visual-essays.esm.js', type: 'module' }
     ]
   },
 
@@ -33,8 +37,9 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
-    '~/plugins/wc-plugin.js',
-    { src: '@/plugins/auth-token.js', ssr: false },
+    { src: '@/plugins/wc-plugin.js', ssr: false },
+    { src: '@/plugins/env.js', ssr: false },
+    { src: '@/plugins/auth-token.js', ssr: false }
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -51,7 +56,7 @@ export default {
     // https://go.nuxtjs.dev/bootstrap
     'bootstrap-vue/nuxt',
     // https://go.nuxtjs.dev/pwa
-    // '@nuxtjs/pwa'
+    '@nuxtjs/pwa'
   ],
 
   // PWA module configuration: https://go.nuxtjs.dev/pwa

@@ -24,6 +24,7 @@
           :options="accounts"
           value-field="login"
           text-field="login"
+          :select-size="accounts.length"
         ></b-form-select>
         
         <b-form-input v-else
@@ -39,6 +40,7 @@
           :options="repositories"
           value-field="name"
           text-field="name"
+          :select-size="Math.max(10,accounts.length)"
         ></b-form-select>`
       </b-input-group>
     </template>
@@ -46,7 +48,7 @@
     <template #modal-footer="{ cancel }">
       <!-- Emulate built in modal footer ok and cancel button actions -->
       <b-button size="sm" variant="primary" @click="submit">
-        Submit
+        Select
       </b-button>
       <b-button size="sm" @click="cancel()">
         Cancel

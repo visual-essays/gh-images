@@ -6,7 +6,8 @@ export const state = () => ({
   path: localStorage.getItem('gh-path') || '',
   unscopedToken: localStorage.getItem('gh-unscoped-token') || '',
   authToken: localStorage.getItem('gh-auth-token') || '',
-  githubClient: GithubClient
+  githubClient: GithubClient,
+  isMobile: false
 })
   
 export const mutations = {
@@ -56,7 +57,9 @@ export const mutations = {
   setGithubClient (state: any) {
     let token = state.authToken || state.unscopedToken
     state.githubClient = token ? new GithubClient(token) : null
-  }
+  },
+
+  setIsMobile (state: any, isMobile: boolean) { state.isMobile = isMobile }
 
 }
   

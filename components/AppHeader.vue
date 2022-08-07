@@ -5,10 +5,9 @@
 
     <b-navbar-brand to="/">Github Images</b-navbar-brand>
     
-
     <div class="repo-selector" v-if="acct" 
       v-b-modal.repository-selector 
-      v-b-tooltip.hover title="Select Repository">
+      v-b-tooltip.hover :title="isMobile ? '' : 'Select Repository'">
       <span v-html="acct"></span>:
       <span v-html="repo"></span>
     </div>
@@ -53,7 +52,8 @@ export default Vue.extend({
   computed: {
     acct() {return this.$store.state.acct},
     repo() {return this.$store.state.repo},
-    isLoggedIn() {return this.$store.state.authToken !== ''}
+    isLoggedIn() {return this.$store.state.authToken !== ''},
+    isMobile(): string {return this.$store.state.isMobile}
   },
   methods: {
 
