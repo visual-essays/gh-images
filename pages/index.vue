@@ -1,5 +1,5 @@
 <template>
-  <div ref="app" id="app" v-html="html"></div>
+  <div id="app" ref="app" v-html="html"></div>
 </template>
 
 <script type="module">
@@ -8,15 +8,15 @@ import Vue from 'vue'
 
 export default Vue.extend({
   data: () => ({
-    acct: '',
-    repo: '',
+    acct: 'kent-map',
+    repo: 'kent',
     ref: 'dev',
     html: null
   }),
   computed: {
     isGhp() { return location.host.indexOf('github.io') > 0 },
-    pathElems() { return this.$route.path.split('/').filter(pe => pe) },
-    path() { return this.pathElems.slice(this.isGhp ? 1 : 2).join('/') },
+    pathElems() { return location.pathname.split('/').filter(elem => elem) },
+    path() { return this.pathElems.slice(this.isGhp ? 1 : 0).join('/') },
     prefix() { return [this.acct, this.repo].filter(elem => elem).join('/') },
     base() { return this.pathElems.length > 0 ? `/${this.pathElems.join('/')}/` : '/' },
     baseQarg() {
@@ -25,28 +25,18 @@ export default Vue.extend({
     }
   },
   created() {
-    console.log(this.$route)
-    this.acct = this.pathElems.length > 0 && this.pathElems[0]
-    this.repo = this.pathElems.length > 1 && this.pathElems[1]
-    this.ref = this.$route.query.ref || ''
+    this.acct = this.acct || (this.isGhp ? location.host.split('.')[0] : this.pathElems.length > 0 ? this.pathElems[0] : '')
+    this.repo = this.repo || (this.isGhp ? this.pathElems.length > 0 ? this.pathElems[0] : '' : this.pathElems.length > 1 ? this.pathElems[1] : '')
     let baseEl = document.head.querySelector('base')
-    if (!baseEl) {
-      baseEl = document.createElement('base')
-      document.head.prepend(baseEl)
-    }
-    baseEl.href = this.base
-    console.log(`acct=${this.acct} repo=${this.repo} ref=${this.ref} path=${this.path} prefix=${this.prefix} base=${this.base} isGhp=${this.isGhp}`)
+    if (baseEl) baseEl.href = this.base
+    // console.log(`acct=${this.acct} repo=${this.repo} ref=${this.ref} path=${this.path} prefix=${this.prefix} base=${this.base} isGhp=${this.isGhp}`)
   },
-  mounted() {
-    this.loadPage()
-    document.body.style.visibility = 'hidden'
-  },
+  mounted() { this.loadPage() },
   methods: {
 
     loadPage() {
       let url = `https://api.juncture-digital.org/html/${this.prefix}/${this.path}${this.path === '' ? '' : '/'}?base=${this.baseQarg}&prefix=${this.prefix}&inline=true`
       if (this.ref) url += `&ref=${this.ref}`
-      console.log(url)
       fetch(url).then(resp => resp.text())
       .then(html => {
         let [head, body] = new DOMParser().parseFromString(html, 'text/html').children[0].children

@@ -3,7 +3,7 @@
   <b-navbar ref="navbar" fixed="top" toggleable="lg" type="dark" variant="primary">
     <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
-    <b-navbar-brand to="/">Github Images</b-navbar-brand>
+    <b-navbar-brand to="/">Juncture Tools</b-navbar-brand>
     
     <div class="repo-selector" v-if="acct" 
       v-b-modal.repository-selector 
