@@ -20,7 +20,7 @@ export default {
     ],
     script: [
       // { src: 'http://localhost:3333/build/visual-essays.esm.js', type: 'module' }
-      // { src: 'https://unpkg.com/visual-essays@0.2.53/dist/visual-essays/visual-essays.esm.js', type: 'module' }
+      { src: 'https://unpkg.com/visual-essays@0.2.53/dist/visual-essays/visual-essays.esm.js', type: 'module' }
     ]
   },
 
