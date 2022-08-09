@@ -14,7 +14,7 @@
       </ul>
     </ve-image-grid>
 
-    <b-button pill class="fab" variant="primary" v-b-modal.add-image>+</b-button>
+    <b-button v-if="isLoggedIn" pill class="fab" variant="primary" v-b-modal.add-image>+</b-button>
     <add-image-dialog></add-image-dialog>
 
   </div>
@@ -43,6 +43,7 @@ export default Vue.extend({
     acct(): string {return this.$store.state.acct},
     repo(): string {return this.$store.state.repo},
     path(): string {return this.$store.state.path},
+    isLoggedIn() {return this.$store.state.authToken !== ''},
     breadCrumbs(): any[] {
       let breadCrumbs = [{text: 'root', to: `/${this.acct}/${this.repo}`}]
       let pathElems = this.path.split('/').filter(pe => pe)

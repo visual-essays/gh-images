@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "nuxt",
+    "dev-local": "NODE_ENV=DEV nuxt",
     "build": "nuxt build",
-    "start": "nuxt start",
+    "start": "NODE_ENV=DEV nuxt start",
     "generate": "nuxt generate",
     "lint:js": "eslint --ext \".js,.ts,.vue\" --ignore-path .gitignore .",
     "lint": "npm run lint:js",
@@ -20,6 +21,7 @@
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.19.3",
     "exif-js": "^2.3.0",
+    "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "nuxt": "^2.15.8",
     "visual-essays": "^0.2.55",

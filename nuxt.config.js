@@ -19,8 +19,7 @@ export default {
       { rel: 'stylesheet', href: 'https://unpkg.com/visual-essays@0.2.53/dist/visual-essays/visual-essays.css' }
     ],
     script: [
-      // { src: 'http://localhost:3333/build/visual-essays.esm.js', type: 'module' }
-      { src: 'https://unpkg.com/visual-essays/dist/visual-essays/visual-essays.esm.js', type: 'module' }
+      {src: `${process.env.NODE_ENV === 'DEV' ? 'http://localhost:3333/build' : 'https://unpkg.com/visual-essays/dist/visual-essays'}/visual-essays.esm.js`, type: 'module'},
     ]
   },
 
