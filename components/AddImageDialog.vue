@@ -28,7 +28,7 @@
         <b-row>
           <b-col sm="3" class="label"><label for="fname">Name:</label></b-col>
           <b-col sm="9" class="value">
-            <b-form-input type="text" ref="fname" id="fname" name="fname" :value="fileName"></b-form-input>
+            <b-form-input type="text" ref="fname" id="fname" name="fname" model="fileName"></b-form-input>
           </b-col>
         </b-row>
         <b-row>
