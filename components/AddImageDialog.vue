@@ -93,7 +93,7 @@ export default Vue.extend({
       if (filePicker && filePicker.files && filePicker.files.length > 0) {
         this.file = filePicker.files[0]
         let parts: string[] = this.file.name.split('.')
-        this.fileName = parts.slice(0,-1).join('.')
+        // this.fileName = parts.slice(0,-1).join('.')
         this.fileExtension = parts.slice(-1)[0].toLowerCase()
         console.log(`name=${this.fileName} extension=${this.fileExtension}`)
         let urlCreator = window.URL || window.webkitURL
@@ -121,7 +121,6 @@ export default Vue.extend({
     async add() {
       console.log('add')
       let metadata = await this.getExifTags()
-      let file: File
       const reader = new FileReader()
       reader.onloadend = async () => {
         const base64data = reader.result 
