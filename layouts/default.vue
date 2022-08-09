@@ -1,5 +1,8 @@
 <template>
-  <Nuxt />
+  <div>
+    <Nuxt />
+    <github-file-manager></github-file-manager>
+  </div>
 </template>
 
 <script lang="ts">

@@ -19,7 +19,7 @@ export default {
       { rel: 'stylesheet', href: 'https://unpkg.com/visual-essays@0.2.53/dist/visual-essays/visual-essays.css' }
     ],
     script: [
-      // { src: 'http://localhost:3333/build/visual-essays.esm.js', type: 'module' }
+      { src: 'http://localhost:3333/build/visual-essays.esm.js', type: 'module' }
       // { src: 'https://unpkg.com/visual-essays@0.2.53/dist/visual-essays/visual-essays.esm.js', type: 'module' }
     ]
   },
@@ -37,7 +37,7 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
-    { src: '@/plugins/wc-plugin.js', ssr: false },
+    // { src: '@/plugins/wc-plugin.js', ssr: false },
     { src: '@/plugins/env.js', ssr: false },
     { src: '@/plugins/auth-token.js', ssr: false }
   ],
@@ -48,7 +48,8 @@ export default {
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: [
     // https://go.nuxtjs.dev/typescript
-    '@nuxt/typescript-build'
+    '@nuxt/typescript-build',
+    '@nuxtjs/fontawesome'
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
@@ -63,6 +64,12 @@ export default {
   pwa: {
     manifest: {
       lang: 'en'
+    }
+  },
+
+  fontawesome: {
+    component: 'fa',
+    icons: {
     }
   },
 

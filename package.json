@@ -12,11 +12,14 @@
     "lintfix": "npm run lint:js -- --fix"
   },
   "dependencies": {
+    "@fortawesome/free-regular-svg-icons": "^6.1.2",
+    "@nuxtjs/fontawesome": "^1.1.2",
     "@nuxtjs/pwa": "^3.3.5",
     "@types/lodash": "^4.14.182",
     "bootstrap": "^4.6.1",
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.19.3",
+    "exif-js": "^2.3.0",
     "lodash": "^4.17.21",
     "nuxt": "^2.15.8",
     "visual-essays": "^0.2.55",
