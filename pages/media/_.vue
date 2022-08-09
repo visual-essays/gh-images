@@ -45,7 +45,7 @@ export default Vue.extend({
     path(): string {return this.$store.state.path},
     isLoggedIn() {return this.$store.state.authToken !== ''},
     breadCrumbs(): any[] {
-      let pathElems = this.$route.fullPath.split('/').filter(pe => pe)
+      let pathElems = this.$route.path.split('/').filter(pe => pe)
       let root = `/${pathElems.slice(0,3).join('/')}`
       let breadCrumbs = [{text: 'root', to: root}]
       for (let i = 3; i < pathElems.length; i++) {
@@ -56,7 +56,6 @@ export default Vue.extend({
   },
   async created() {},
   async mounted() {
-    console.log(this.$route)
     let pathElems = this.$route.params.pathMatch.split('/').filter(pe => pe)
     this.$store.commit('setPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
     if (pathElems.length > 0) this.$store.commit('setAcct', pathElems[0])
@@ -75,7 +74,7 @@ export default Vue.extend({
         let dirs: string[] = []
         items.forEach((item:any) => {
           if (item.type === 'dir') {
-            dirs.push(`${this.$route.fullPath}/${item.name}`)
+            dirs.push(`${this.$route.path}/${item.name}`)
           } else {
             if (!ignore.has(item.name)) {
               let elems = item.name.split('.')
