@@ -29,8 +29,9 @@ export default Vue.extend({
     let pathOffset = this.$route.name.replace(/-all$/,'').split('/').filter(pe => pe).length
     console.log(this.acct, this.repo, this.branch, this.basePath, pathOffset)
     let _pathElems = this.$route.path.split('/').filter(pe => pe)
-    this._acct = this.acct || (_pathElems.length > 0 ? _pathElems[0] : '')
-    this._repo = this.repo || (_pathElems.length > 1 ? _pathElems[2] : '')
+    console.log(_pathElems)
+    this._acct = this.acct || (_pathElems.length > 0 ? _pathElems[0] : 'visual-essays')
+    this._repo = this.repo || (_pathElems.length > 1 ? _pathElems[1] : 'content')
     this._ref = this.branch || (this.$route.query.branch || this.$route.query.ref || '')
     this._path = [...this.root.split('/'), ..._pathElems.slice(this.acct ? 0+pathOffset : 2)].filter(pe => pe).join('/')
     this._prefix = [this._acct, this._repo].filter(elem => elem).join('/')

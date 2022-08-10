@@ -33,6 +33,7 @@ const ignore = new Set(['iiif-props.yaml', 'iiif-props.template.yaml'])
 export default Vue.extend({
   name: 'Media',
   data: () => ({
+    baseRoute: '',
     root: '',
     baseUrl: '',
     dirs: <string[]>[],
@@ -57,26 +58,31 @@ export default Vue.extend({
   },
   async created() {},
   async mounted() {
+    this.baseRoute = (this.$route.name || '').replace(/-all$/,'').split('/').filter(pe => pe).join('/')
     console.log(this.$route)
     let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
     this.$store.commit('setPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
     if (pathElems.length > 0) this.$store.commit('setAcct', pathElems[0])
     if (pathElems.length > 1) this.$store.commit('setRepo', pathElems[1])
     this.baseUrl = location.origin
-    this.root = this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : ''
+    this.root = [this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
+    // this.root = this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : ''
     console.log(`${this.$options.name}.mounted acct=${this.acct} repo=${this.repo} path=${this.path} baseUrl=${this.baseUrl} root=${this.root}`)
-    if (this.acct && this.repo) window.history.replaceState({}, '', `/media/${this.root}`)
+    if (this.acct && this.repo) {
+      let path = [this.baseRoute, this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
+      window.history.replaceState({}, '', `/${path}`)
+    }
   },
   methods: {
     async listContents() {
-      let url = `${api}/dir/${this.root}/`
       await fetch(`${api}/dir/${this.root}/`).then(resp => resp.json())
       .then(items => {
         let manifests = new Set()
         let dirs: string[] = []
         items.forEach((item:any) => {
           if (item.type === 'dir') {
-            dirs.push(`${this.$route.path}/${item.name}`)
+            let path = [this.baseRoute, this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
+            dirs.push(`/${path}/${item.name}`)
           } else {
             if (!ignore.has(item.name)) {
               let elems = item.name.split('.')
