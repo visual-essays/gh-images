@@ -12,7 +12,7 @@ export default Vue.extend({
     acct: { type: String, default: '' },
     repo: { type: String, default: '' },
     branch: { type: String, default: '' },
-    basePath: { type: String, default: '' }
+    root: { type: String, default: '' }
   },
   data: () => ({
     _acct: '',
@@ -25,12 +25,14 @@ export default Vue.extend({
     html: null
   }),
   created() {
-    console.log(this.acct, this.repo, this.branch, this.basePath)
+    console.log(this.$route)
+    let pathOffset = this.$route.name.replace(/-all$/,'').split('/').filter(pe => pe).length
+    console.log(this.acct, this.repo, this.branch, this.basePath, pathOffset)
     let _pathElems = this.$route.path.split('/').filter(pe => pe)
     this._acct = this.acct || (_pathElems.length > 0 ? _pathElems[0] : '')
     this._repo = this.repo || (_pathElems.length > 1 ? _pathElems[2] : '')
     this._ref = this.branch || (this.$route.query.branch || this.$route.query.ref || '')
-    this._path = [...this.basePath.split('/'), ..._pathElems.slice(this.acct ? 0 : 2)].filter(pe => pe).join('/')
+    this._path = [...this.root.split('/'), ..._pathElems.slice(this.acct ? 0+pathOffset : 2)].filter(pe => pe).join('/')
     this._prefix = [this._acct, this._repo].filter(elem => elem).join('/')
     this._base = _pathElems.length > 0 ? `/${_pathElems.join('/')}/` : '/'
     let _basePathElems = this._base.split('/').filter(elem => elem)

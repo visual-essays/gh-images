@@ -31,12 +31,6 @@
   </b-navbar>
   <div style="height:56px;"></div>
 
-  <div>
-    <b-modal id="modal-1" title="Github Repository Selector">
-      <repository-selector></repository-selector>
-    </b-modal>
-  </div>
-
   <repository-selector></repository-selector>
 
 </div>
@@ -54,6 +48,9 @@ export default Vue.extend({
     repo() {return this.$store.state.repo},
     isLoggedIn() {return this.$store.state.authToken !== ''},
     isMobile(): string {return this.$store.state.isMobile}
+  },
+  created() {
+    console.log(this.$route)
   },
   methods: {
 

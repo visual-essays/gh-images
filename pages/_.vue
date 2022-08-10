@@ -1,3 +1,3 @@
 <template>
-  <visual-essay acct="kent-map" repo="kent" branch="dev"></visual-essay>
+  <visual-essay acct="kent-map" repo="kent" path="dickens" branch="dev"></visual-essay>
 </template>

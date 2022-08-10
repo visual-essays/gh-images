@@ -70,7 +70,8 @@ export default Vue.extend({
     selectedAcct: <string>'',
     selectedRepo: <string>'',
     accounts: <any[]>[],
-    repositories: <any[]>[]
+    repositories: <any[]>[],
+    root: <string>''
   }),
   computed: {
     acct(): string {return this.$store.state.acct},
@@ -80,6 +81,7 @@ export default Vue.extend({
   },
   created() {
     this.acctInputHandler = <any>_.debounce(this.acctInputHandler, 500)
+    this.root = (this.$route.name || '').replace(/-all$/,'').split('/').filter(pe => pe).join('/')
   },
   methods: {
     
@@ -115,7 +117,8 @@ export default Vue.extend({
       this.$store.commit('setAcct', this.selectedAcct)
       this.$store.commit('setRepo', this.selectedRepo)
       this.$store.commit('setPath', '')
-      this.$router.push({path: `/${this.acct}/${this.repo}`})
+      let path = `/${[this.root,this.acct,this.repo].filter(pe => pe).join('/')}`
+      this.$router.push({path})
     }
 
   },
