@@ -1,6 +1,6 @@
 <template>
   <div>
-    Essays
+    Media
   </div>
 </template>
 
@@ -9,7 +9,7 @@
 import Vue from 'vue'
 
 export default Vue.extend({
-  name: 'EssaysPage',
+  name: 'MediaPage',
   data: () => ({}),
   computed: {},
   async created() {},
