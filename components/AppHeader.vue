@@ -19,6 +19,8 @@
     <b-collapse id="nav-collapse" is-nav>
       <!-- Inline nav items -->
       <b-navbar-nav>
+        <b-nav-item to="/media">Media</b-nav-item>
+        <b-nav-item to="/essays">Essays</b-nav-item>
       </b-navbar-nav>
 
       <!-- Right aligned nav items -->

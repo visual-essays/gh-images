@@ -1,3 +1,3 @@
 <template>
-  <visual-essay acct="visual-essays" repo="tools" root="docs" path="essays"></visual-essay>
+  <visual-essay acct="visual-essays" repo="tools" path="docs/essays"></visual-essay>
 </template>
