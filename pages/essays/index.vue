@@ -1,24 +1,3 @@
 <template>
-  <div>
-    Media
-  </div>
+  <visual-essay acct="visual-essays" repo="tools" root="docs" path="essays"></visual-essay>
 </template>
-
-<script lang="ts">
-
-import Vue from 'vue'
-
-export default Vue.extend({
-  name: 'MediaPage',
-  data: () => ({}),
-  computed: {},
-  async created() {},
-  async mounted() {},
-  methods: {},
-  watch: {}
-})
-
-</script>
-
-<style scoped>
-</style>

@@ -1,5 +1,7 @@
 <template>
   <div>
+        <app-header></app-header>
+
     <Nuxt />
     <github-file-manager></github-file-manager>
   </div>

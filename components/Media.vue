@@ -1,7 +1,5 @@
 <template>
   <div>
-    <app-header></app-header>
-
     <b-breadcrumb :items="breadCrumbs"></b-breadcrumb>
 
     <b-button-group size="sm" class="dir">
