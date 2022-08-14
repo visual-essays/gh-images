@@ -38,6 +38,18 @@ export class GithubClient {
     }).then(resp => resp.json())
   }
 
+  async getFile(acct:string, repo:string, path:string, ref:string): Promise<any> {
+    let content
+    let url = `https://api.github.com/repos/${acct}/${repo}/contents${path}`
+    if (ref) url += `?ref=${ref}`
+    let resp: any = await fetch(url, {headers: {Authorization:`Token ${this.authToken}`}})
+    if (resp.ok) {
+      resp = await resp.json()
+      content = decodeURIComponent(escape(atob(resp.content)))
+    }
+    return Promise.resolve(content)
+  }
+
   async putFile(acct:string, repo:string, path:string, content:any, ref:string): Promise<any> {
     console.log(`putFile: acct=${acct} repo=${repo} ref=${ref} path=${path}`)
     let url = `https://api.github.com/repos/${acct}/${repo}/contents/${path}`
@@ -84,6 +96,24 @@ export class GithubClient {
       files = _dirList.tree.map((item: any) => ({name: item.path, sha: item.sha, type: item.type === 'tree' ? 'dir' : 'file'}))
     }
     return files
+  }
+
+  async fullPath(acct:string, repo:string, path:string, ref:string): Promise<string> {
+    let pathElems = path.split('/').filter(pe => pe)
+    let leafElem = pathElems[pathElems.length-1]
+    let dirList = await this.dirlist(acct, repo, pathElems.join('/'), ref)
+    if (dirList.length === 0) {
+      pathElems.pop()
+      dirList = await this.dirlist(acct, repo, pathElems.join('/'), ref)
+    }
+    let toFind = [leafElem, `${leafElem}.md`, 'README.md']
+    for (let i = 0; i < toFind.length; i++) {
+      if (dirList.find(item => item.type === 'file' && (item.name === toFind[i]))) {
+        pathElems.push(toFind[i])
+        break
+      }
+    }
+    return pathElems.join('/')
   }
 
   async newFolder(acct:string, repo:string, path:string, ref:string): Promise<any[]> {

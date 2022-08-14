@@ -233,10 +233,12 @@ export default Vue.extend({
     content(markdown) {
       this.simplemde.value(markdown)
     },
+    /*
     isPreviewActive(isActive) {
       if (isActive) this.$refs.main.classList.add('preview')
       else this.$refs.main.classList.remove('preview')
     }
+    */
   }
 })
 

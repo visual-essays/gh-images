@@ -1,9 +1,11 @@
 <template>
   <div>
-        <app-header></app-header>
+    <app-header></app-header>
 
     <Nuxt />
     <github-file-manager></github-file-manager>
+    <github-folder-selector></github-folder-selector>
+    <github-file-selector></github-file-selector>
   </div>
 </template>
 

@@ -4,6 +4,7 @@ export const state = () => ({
   acct: localStorage.getItem('gh-acct') || '',
   repo: localStorage.getItem('gh-repo') || '',
   path: localStorage.getItem('gh-path') || '',
+  fileSelectorPath: '',
   unscopedToken: localStorage.getItem('gh-unscoped-token') || '',
   authToken: localStorage.getItem('gh-auth-token') || '',
   githubClient: GithubClient,
@@ -27,6 +28,8 @@ export const mutations = {
     else localStorage.removeItem('gh-path')
   },
   
+  setFileSelectorPath (state: any, path: string) { state.fileSelectorPath = path },
+
   setUnscopedToken (state: any, token: string) {
     state.unscopedToken = token
     if (token) {

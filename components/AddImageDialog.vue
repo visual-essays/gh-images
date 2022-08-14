@@ -17,7 +17,7 @@
           <b-col sm="3" class="label"><label for="folder">Folder:</label></b-col>
           <b-col sm="9" class="value">
             <b-form-input type="text" plaintext ref="folder" id="folder" name="folder" :value="folder"></b-form-input>
-            <b-button size="sm" variant="outline-primary" v-b-modal.github-file-manager>Change</b-button>
+            <b-button size="sm" variant="outline-primary" v-b-modal.github-folder-selector>Change</b-button>
           </b-col>
         </b-row>
         <b-row>
@@ -101,7 +101,7 @@ export default Vue.extend({
   async mounted() {
     this.$root.$on('bv::modal::show', this.onOpen)
     this.$root.$on('bv::modal::hide', this.onClose)
-    this.$root.$on('path-changed', (path: string) => this.folder = path)
+    this.$root.$on('github-folder-changed', (path: string) => this.folder = path)
   },
   methods: {
 
