@@ -19,8 +19,8 @@
           </li>
         </ul>
 
-        <ul class="files" v-if="!selectedFile && files.length > 0">
-          <li class="file" v-for="file in files" :key="file.sha">
+        <ul class="files" v-if="!foldersOnly && files.length > 0">
+          <li :class="`file${file.name === selectedFile ? ' selected' : ''}`" v-for="file in files" :key="file.sha">
             <span v-html="file.name" @click="fileSelected(file)"></span>
             <span v-b-tooltip.hover title="Delete file" class="trashcan" @click="deleteFile(file)">
               <fa class="trash-icon" :icon="faTrashCan"></fa>
@@ -55,7 +55,8 @@ import { faFolder, faTrashCan }  from '@fortawesome/free-regular-svg-icons'
 export default Vue.extend({
   name: 'GithubFileSelector',
   props: {
-    id: { type: String, default: 'github-file-selector' }
+    id: { type: String, default: 'essays-file-selector' },
+    foldersOnly: { type: Boolean, default: false },
   },
   data: () => ({
     dirList: <any[]>[],
@@ -64,15 +65,17 @@ export default Vue.extend({
     newFilePath: '',
   }),
   computed: {
-    acct(): string {return this.$store.state.acct},
-    repo(): string {return this.$store.state.repo},
+    role(): string {return this.id.split('-')[0]},
+    acct(): string {return this.$store.state[`${this.role}Acct`]},
+    repo(): string {return this.$store.state[`${this.role}Repo`]},
     path(): string {return this.$store.state.fileSelectorPath},
     githubClient() {return this.$store.state.githubClient},
     dirs() {return this.dirList.filter(item => item.type === 'dir').map(item => item.name)},
     files() {return this.dirList.filter(item => item.type === 'file')},
     breadCrumbs(): any[] {
       let breadCrumbs = [{text: 'root', to: ``}]
-      let pathElems = [...this.curDir.split('/'), this.selectedFile].filter(pe => pe)
+      // let pathElems = [...this.curDir.split('/'), this.selectedFile].filter(pe => pe)
+      let pathElems = this.curDir.split('/').filter(pe => pe)
       for (let i = 0; i < pathElems.length; i++) {
         breadCrumbs.push({text: pathElems[i], to: `${pathElems.slice(0,i+1).join('/')}`})
       }
@@ -81,6 +84,7 @@ export default Vue.extend({
     faFolder() { return faFolder },
     faTrashCan() { return faTrashCan }
   },
+  created() { console.log(`${this.$options.name}: role=${this.role} foldersOnly=${this.foldersOnly}`)},
   async mounted() {
     this.$root.$on('bv::modal::show', this.onOpen)
     this.$root.$on('bv::modal::hide', this.onClose)
@@ -88,14 +92,14 @@ export default Vue.extend({
   methods: {
 
     select() {
-      (this as any).$bvModal.hide(this.id)
       let path = this.curDir + (this.selectedFile ? `/${this.selectedFile}`: '')
+      console.log(`select: curDir=${this.curDir} selectedFile=${this.selectedFile} path=${path}`)
       this.$root.$emit('github-path-changed', path)
+      ;(this as any).$bvModal.hide(this.id)
     },
 
     onOpen(evt:any, modalId:string) {
       if (modalId === this.id) {
-        this.curDir = this.path
         this.update(this.path)
       }
     },
@@ -103,6 +107,7 @@ export default Vue.extend({
     onClose(evt:any, modalId:string) {
       if (modalId === this.id) {
         this.dirList = []
+        this.curDir = ''
       } else if (modalId === `${this.id}-new-file-path`) {
         this.createFile()
       }
@@ -110,6 +115,7 @@ export default Vue.extend({
 
     fileSelected(file:any) {
       this.selectedFile = file.name
+      console.log(`fileSelected=${this.selectedFile}`)
     },
 
     openDialog() {
@@ -119,21 +125,23 @@ export default Vue.extend({
     async update(path:string) {
       path = path.split('/').filter(pe => pe).join('/')
       let pathElems = path.split('/').filter(pe => pe)
+      console.log(`${this.id}.update: acct=${this.acct} repo=${this.repo} path=${pathElems.join('/')}`)
       let dirList: any[] = await this.githubClient.dirlist(this.acct, this.repo, pathElems.join('/'))
       if (dirList.length === 0) {
-        dirList = await this.githubClient.dirlist(this.acct, this.repo, pathElems.slice(0,-1).join('/'))
+        let leaf = pathElems.pop()
+        dirList = await this.githubClient.dirlist(this.acct, this.repo, pathElems.join('/'))
         this.dirList = dirList
-        this.curDir = pathElems.slice(0,-1).filter(pe => pe).join('/')
-        if (dirList.find(item => item.type === 'file' && item.name === `${pathElems[pathElems.length-1]}.md`)) {
-          this.selectedFile = `${pathElems[pathElems.length-1]}.md`
-        } else if (dirList.find(item => item.type === 'file' && item.name === 'README.md')) {
-          this.selectedFile = 'README.md'
-        }
+        this.curDir = pathElems.filter(pe => pe).join('/')
+        let found = dirList.find(item => item.type === 'file' && item.name === leaf)
+        if (!found) found = dirList.find(item => item.type === 'file' && item.name === `${pathElems[pathElems.length-1]}.md`)
+        if (!found) found = dirList.find(item => item.type === 'file' && item.name === 'README.md')
+        if (found) this.selectedFile = found.name
       } else {
         this.dirList = dirList
         this.curDir = path
         this.selectedFile = ''
       }
+      console.log(`update: curDir=${this.curDir}`)
       this.dirList = dirList
 
       // this.githubClient.dirlist(this.acct, this.repo, this.curDir).then((dirList:any[]) => this.dirList = dirList)
@@ -145,11 +153,9 @@ export default Vue.extend({
         let fname = (path.split('/').pop() as string)
         let content = fname.indexOf('.md') === fname.length-3 ? `# ${fname.slice(0,-3)}` : ''
         await this.githubClient.putFile(this.acct, this.repo, path, content)
-
         this.githubClient.dirlist(this.acct, this.repo, this.curDir).then((dirList:any[]) => this.dirList = dirList)
       }
     },
-
 
     async deleteFile(toDelete:any) {
       let path = `${this.curDir}/${toDelete.name}`
@@ -210,6 +216,12 @@ export default Vue.extend({
 
   .file .trashcan {
     margin-left: auto;
+  }
+
+  .selected {
+    background-color: #ddd;
+    border: 1px solid #999;
+    border-radius: 3px;
   }
 
   .dir:hover, .file:hover {

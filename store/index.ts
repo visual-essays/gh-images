@@ -1,33 +1,69 @@
 import { GithubClient } from '../gh-utils'
 
 export const state = () => ({
-  acct: localStorage.getItem('gh-acct') || '',
-  repo: localStorage.getItem('gh-repo') || '',
-  path: localStorage.getItem('gh-path') || '',
+  mediaAcct: localStorage.getItem('gh-media-acct') || '',
+  mediaRepo: localStorage.getItem('gh-media-repo') || '',
+  mediaPath: localStorage.getItem('gh-media-path') || '',
+  mediaContentPath: localStorage.getItem('gh-media-content-path') || '',
+  
+  essaysAcct: localStorage.getItem('gh-essays-acct') || '',
+  essaysRepo: localStorage.getItem('gh-essays-repo') || '',
+  essaysPath: localStorage.getItem('gh-essays-path') || '',
+  essaysContentPath: localStorage.getItem('gh-essays-content-path') || '',
+
   fileSelectorPath: '',
+  
   unscopedToken: localStorage.getItem('gh-unscoped-token') || '',
   authToken: localStorage.getItem('gh-auth-token') || '',
   githubClient: GithubClient,
+  
   isMobile: false
 })
   
 export const mutations = {
-  setAcct (state: any, acct: string) {
-    state.acct = acct
-    if (acct) localStorage.setItem('gh-acct', acct)
-    else localStorage.removeItem('gh-acct')
-  },
-  setRepo (state: any, repo: string) {
-    state.repo = repo
-    if (repo) localStorage.setItem('gh-repo', repo)
-    else localStorage.removeItem('gh-repo')
-  },
-  setPath (state: any, path: string) {
-    state.path = path
-    if (path) localStorage.setItem('gh-path', path)
-    else localStorage.removeItem('gh-path')
-  },
   
+  setMediaAcct (state: any, acct: string) {
+    state.mediaAcct = acct
+    if (acct) localStorage.setItem('gh-media-acct', acct)
+    else localStorage.removeItem('gh-media-acct')
+  },
+  setMediaRepo (state: any, repo: string) {
+    state.mediaRepo = repo
+    if (repo) localStorage.setItem('gh-media-repo', repo)
+    else localStorage.removeItem('gh-media-repo')
+  },
+  setMediaPath (state: any, path: string) {
+    state.mediaPath = path
+    if (path) localStorage.setItem('gh-media-path', path)
+    else localStorage.removeItem('gh-media-path')
+  },
+  setMediaContentPath (state: any, path: string) {
+    state.mediaContentPath = path
+    if (path) localStorage.setItem('gh-media-content-path', path)
+    else localStorage.removeItem('gh-media-content-path')
+  },
+
+  setEssaysAcct (state: any, acct: string) {
+    state.essaysAcct = acct
+    if (acct) localStorage.setItem('gh-essays-acct', acct)
+    else localStorage.removeItem('gh-essays-acct')
+  },
+  setEssaysRepo (state: any, repo: string) {
+    state.essaysRepo = repo
+    if (repo) localStorage.setItem('gh-essays-repo', repo)
+    else localStorage.removeItem('gh-essays-repo')
+  },
+  setEssaysPath (state: any, path: string) {
+    state.essaysPath = path
+    if (path) localStorage.setItem('gh-essays-path', path)
+    else localStorage.removeItem('gh-essays-path')
+  },
+  setEssaysContentPath (state: any, path: string) {
+    state.essaysContentPath = path
+    if (path) localStorage.setItem('gh-essays-content-path', path)
+    else localStorage.removeItem('gh-essays-content-path')
+  },
+
   setFileSelectorPath (state: any, path: string) { state.fileSelectorPath = path },
 
   setUnscopedToken (state: any, token: string) {

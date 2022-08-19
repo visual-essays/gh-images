@@ -3,9 +3,13 @@
     <app-header></app-header>
 
     <Nuxt />
+    <!--
     <github-file-manager></github-file-manager>
     <github-folder-selector></github-folder-selector>
-    <github-file-selector></github-file-selector>
+    -->
+    <github-file-selector id="essays-file-selector"></github-file-selector>
+    <github-file-selector id="media-file-selector" folders-only></github-file-selector>
+
   </div>
 </template>
 

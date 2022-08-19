@@ -73,6 +73,7 @@ export class GithubClient {
   }
 
   async dirlist(acct:string, repo:string, path:string, ref:string): Promise<any[]> {
+    console.log(`GithubClient.dirList: acct=${acct} repo=${repo} path=${path} ref=${ref}`)
     path = path || ''
     ref = ref || this.defaultBranch(acct, repo)
     let files: any[] = []
@@ -93,12 +94,13 @@ export class GithubClient {
     if (url) {
       let resp = await fetch(url, {headers})
       let _dirList: any = resp.ok ? await resp.json() : {}
-      files = _dirList.tree.map((item: any) => ({name: item.path, sha: item.sha, type: item.type === 'tree' ? 'dir' : 'file'}))
+      files = (_dirList.tree || []).map((item: any) => ({name: item.path, sha: item.sha, type: item.type === 'tree' ? 'dir' : 'file'}))
     }
     return files
   }
 
   async fullPath(acct:string, repo:string, path:string, ref:string): Promise<string> {
+    console.log(`GithubClient.fullPath: acct=${acct} repo=${repo} path=${path} ref=${ref}`)
     let pathElems = path.split('/').filter(pe => pe)
     let leafElem = pathElems[pathElems.length-1]
     let dirList = await this.dirlist(acct, repo, pathElems.join('/'), ref)
@@ -113,7 +115,8 @@ export class GithubClient {
         break
       }
     }
-    return pathElems.join('/')
+    let fullPath = pathElems.join('/')
+    return fullPath
   }
 
   async newFolder(acct:string, repo:string, path:string, ref:string): Promise<any[]> {

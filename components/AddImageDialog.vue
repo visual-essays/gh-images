@@ -117,9 +117,11 @@ export default Vue.extend({
       }
     },
 
-    onOpen() {
-      this.folder = this.path
-      this.githubClient.dirlist(this.acct, this.repo, this.path).then((dirList:any[]) => this.dirList = dirList)
+    onOpen(evt:any, modalId:string) {
+      if (modalId === 'add-image') {
+        this.folder = this.path
+        this.githubClient.dirlist(this.acct, this.repo, this.path).then((dirList:any[]) => this.dirList = dirList)
+      }
     },
 
     onClose(evt:any, modalId:string) {

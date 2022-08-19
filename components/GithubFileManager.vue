@@ -90,7 +90,6 @@ export default Vue.extend({
 
     onOpen(evt:any, modalId:string) {
       if (modalId === this.id) {
-        console.log(`onOpen: ${this.id}`)
         this.curPath = this.path
         this.update(this.path)
       }
@@ -107,7 +106,6 @@ export default Vue.extend({
 
     update(path:string) {
       this.curPath = path
-      console.log(`update: path=${this.path}`)
       this.githubClient.dirlist(this.acct, this.repo, this.curPath).then((dirList:any[]) => this.dirList = dirList)
     },
 
@@ -133,9 +131,7 @@ export default Vue.extend({
 
   },
 
-  watch: {
-    dirList() { console.log(`${this.$options.name}.dirList`, this.dirList) }
-  }
+  watch: {}
 })
 
 </script>

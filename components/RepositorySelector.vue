@@ -1,5 +1,5 @@
 <template>
-  <b-modal id="repository-selector">
+  <b-modal :id="id">
     <template #modal-header="{ close }">
       <h5>Github Repository Selector</h5>
     </template>
@@ -10,7 +10,7 @@
           id="mode-cb"
           v-model="mode"
           name="mode"
-          value="mine"
+          value="memberOf"
           unchecked-value="any"
         >
         My Github account and organizations
@@ -19,7 +19,7 @@
 
       <b-input-group>
       <b-form-select
-          v-if="mode === 'mine'"
+          v-if="mode === 'memberOf'"
           v-model="selectedAcct"
           :options="accounts"
           value-field="login"
@@ -32,10 +32,11 @@
           autocapitalize="off"
           placeholder="Enter user or account"
           @keyup="acctInputHandler"
-          :value="selectedAcct"
+          :value="selectedAcct || acct"
         ></b-form-input>
 
         <b-form-select
+          v-if="selectedAcct"
           v-model="selectedRepo"
           :options="repositories"
           value-field="name"
@@ -63,10 +64,18 @@
 import Vue from 'vue'
 import _ from 'lodash'
 
+const defaultsForRole: any = {
+  'media': new Set(['images']),
+  'essays': new Set(['essays'])
+}
+
 export default Vue.extend({
   name: 'RepositorySelector',
+  props: {
+    id: { type: String, default: 'essays-repository-selector' }
+  },
   data: () => ({
-    mode: <string>'mine',
+    mode: <string>'memberOf',
     selectedAcct: <string>'',
     selectedRepo: <string>'',
     accounts: <any[]>[],
@@ -74,8 +83,9 @@ export default Vue.extend({
     root: <string>''
   }),
   computed: {
-    acct(): string {return this.$store.state.acct},
-    repo(): string {return this.$store.state.repo},
+    role(): string {return this.id.split('-')[0]},
+    acct(): string {return this.$store.state[`${this.role}Acct`]},
+    repo(): string {return this.$store.state[`${this.role}Repo`]},
     isLoggedIn() {return this.$store.state.authToken !== ''},
     githubClient() {return this.$store.state.githubClient}
   },
@@ -83,14 +93,24 @@ export default Vue.extend({
     this.acctInputHandler = <any>_.debounce(this.acctInputHandler, 500)
     this.root = (this.$route.name || '').replace(/-all$/,'').split('/').filter(pe => pe).join('/')
   },
+  async mounted() {
+    this.$root.$on('bv::modal::show', this.onOpen)
+  },
   methods: {
     
+    onOpen(evt:any, modalId:string) {
+      if (this.id === modalId) {
+        console.log(`onOpen: ${this.id} acct=${this.acct} repo=${this.repo} selectedAcct=${this.selectedAcct}`)
+      }
+    },
+
     async getAccounts(): Promise<string[]> {
       return await Promise.all([this.githubClient.user(), this.githubClient.organizations()])
       .then(responses => responses.flat())
     },
     
     async getRepositories(acct:string): Promise<string[]> {
+      console.log(`getRepositories: acct=${acct}`)
       return this.githubClient.repos(acct)
     },
     
@@ -100,7 +120,7 @@ export default Vue.extend({
         ? await this.getRepositories(this.selectedAcct)
         : []
       this.selectedRepo = this.repositories.length
-        ? (this.repositories.find((repo:any) => repo.name.toLowerCase() === 'images') || this.repositories[0]).name
+        ? (this.repositories.find((repo:any) => defaultsForRole[this.role].has(repo.name.toLowerCase())) || this.repositories[0]).name
         : []
     },
 
@@ -113,25 +133,28 @@ export default Vue.extend({
     },
 
     submit() {
-      (this as any).$bvModal.hide('repository-selector')
-      this.$store.commit('setAcct', this.selectedAcct)
-      this.$store.commit('setRepo', this.selectedRepo)
-      this.$store.commit('setPath', '')
-      let path = `/${[this.root,this.acct,this.repo].filter(pe => pe).join('/')}`
-      this.$router.push({path})
-    }
+      (this as any).$bvModal.hide(this.id)
+      this.$store.commit(`set${this.toTitleCase(this.role)}Acct`, this.selectedAcct)
+      this.$store.commit(`set${this.toTitleCase(this.role)}Repo`, this.selectedRepo)
+      this.$store.commit(`set${this.toTitleCase(this.role)}Path`, '')
+      // let path = `/${[this.root,this.acct,this.repo].filter(pe => pe).join('/')}`
+      // this.$router.push({path})
+    },
 
+    toTitleCase(s:string) {
+      return (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
+    }
   },
 
   watch: {
     
     mode(mode) {
-      if (mode === 'mine') this.getMyRepositories()
+      if (mode === 'memberOf') this.getMyRepositories()
     },
 
     isLoggedIn: {
       async handler(isLoggedIn) {
-        this.mode = isLoggedIn ? 'mine' : 'any'
+        this.mode = isLoggedIn ? 'memberOf' : 'any'
         if (isLoggedIn) this.getMyRepositories()
       },
       immediate: true
@@ -146,14 +169,15 @@ export default Vue.extend({
 
     selectedAcct: {
       async handler () {
-        this.repositories = await this.getRepositories(this.selectedAcct)
+        if (this.selectedAcct)
+          this.repositories = await this.getRepositories(this.selectedAcct)
       },
       immediate: true
     },
   
     repositories() {
       this.selectedRepo = this.repositories.length
-        ? (this.repositories.find((repo:any) => repo.name.toLowerCase() === 'images') || this.repositories[0]).name
+        ? (this.repositories.find((repo:any) => defaultsForRole[this.role].has(repo.name.toLowerCase())) || this.repositories[0]).name
         : ''
     }
   }

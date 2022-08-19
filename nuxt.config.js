@@ -5,6 +5,10 @@ export default {
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
 
+  env: {
+    isDev: process.env.NODE_ENV === 'DEV'
+  },
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'gh-images',

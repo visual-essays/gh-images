@@ -2,18 +2,7 @@
   <div id="editor">
     
     <div class="controls">
-      <div class="breadcrumb">
-        <span v-b-tooltip.hover title="Select file" class="select-file-icon" v-b-modal.github-file-selector>
-          <fa :icon="folderIcon"></fa>
-        </span>
-        <b-breadcrumb>
-          <b-breadcrumb-item v-for="item, idx in breadCrumbs" :key="`bc-${idx}`" 
-            @click="selectFile(item)"
-            :html="item.text"
-            :disabled="idx === breadCrumbs.length-1"
-          ></b-breadcrumb-item>
-        </b-breadcrumb>
-      </div>
+      <content-path></content-path>
 
       <div class="buttons">
         <span @click="showHelp" v-b-tooltip.hover title="Show Help Documentation"><fa :icon="helpIcon"></fa></span>
@@ -37,56 +26,29 @@ import { faCircleQuestion, faCopy, faEye, faFloppyDisk, faFolderOpen }  from '@f
 import { faArrowUpRightFromSquare, faLink }  from '@fortawesome/free-solid-svg-icons'
 
 const SimpleMDE: any = (window as any).SimpleMDE
-const isDev = location.host === 'localhost:5555'
-const apiEndpoint = isDev
+
+const apiEndpoint = process.env.isDev
   ? 'http://localhost:8000'
   : location.hostname === 'localhost'
     ? 'https://api.juncture-digital.org'
     : `https://api.${location.hostname.split('.').slice(1).join('.')}`
-const iiifEndpoint = isDev
-  ? 'http://localhost:8088'
-  : location.hostname === 'localhost'
-    ? 'https://iiif.juncture-digital.org'
-    : `https://iiif.${location.hostname.split('.').slice(1).join('.')}`
-const webappHost = isDev
-  ? 'http://localhost:8080'
-  : location.hostname === 'editor.juncture-digital.org'
-    ? 'https://beta.juncture-digital.org'
-    : `https://${location.hostname.split('.').slice(1).join('.')}`
-const authEndpoint = isDev
-  ? 'https://editor.visual-essays.net/.netlify/identity/token'
-  : `https://editor.${location.hostname.split('.').slice(1).join('.')}/.netlify/identity/token`
 const wcDevEndpoint = 'http://localhost:3333/build'
-
-const api = 'https://api.juncture-digital.org'
 
 export default Vue.extend({
   name: 'Editor',
   data: () => ({
-    contentPath: '',
     content: '',
     simplemde: <any>{},
     isPreviewActive: false,
     loadedDependencies: <any[]>[]
   }),
   computed: {
-    baseRoute(): string {return (this.$route.name || '').replace(/-all$/,'').split('/').filter(pe => pe).join('/')},
-    acct(): string {return this.$store.state.acct},
-    repo(): string {return this.$store.state.repo},
-    path(): string {return this.$store.state.path},
+    acct(): string {return this.$store.state.essaysAcct},
+    repo(): string {return this.$store.state.essaysRepo},
+    contentPath(): string {return this.$store.state.essaysContentPath},
     authToken(): string {return this.$store.state.authToken},
     githubClient() {return this.$store.state.githubClient},
-    isLoggedIn() {return this.$store.state.authToken !== ''},
-    breadCrumbs(): any[] {
-      let pathElems = this.contentPath.split('/').filter(pe => pe)
-      // let root = `/${this.baseRoute}/${this.acct}/${this.repo}`
-      let root = ''
-      let breadCrumbs = [{text: 'root', to: root}]
-      for (let i = 0; i < pathElems.length; i++) {
-        breadCrumbs.push({text: pathElems[i], to: `${root}/${pathElems.slice(0,i+1).join('/')}`})
-      }
-      return breadCrumbs
-    },
+    
     launchIcon() { return faArrowUpRightFromSquare },
     helpIcon() { return faCircleQuestion },
     copyIcon() { return faCopy },
@@ -95,47 +57,33 @@ export default Vue.extend({
     folderIcon() { return faFolderOpen },
     linkIcon() { return faLink }
   },
-  async created() {
-  },
+  created() { console.log(`${this.$options.name}.created`)},
   async mounted() {
+    if (this.acct && this.repo) {
+      console.log(`essaysAcct=${this.acct} essaysRepo=${this.repo} essaysContentPath=${this.contentPath}`)
+      let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
+      window.history.replaceState({}, '', `/${path}`)
+    }
     this.initEditor()
-    this.$root.$on('github-path-changed', (path: string) => {
-      path = path.replace(/\/README\.md$/,'').replace(/\.md$/,'')
-      this.$store.commit('setPath', path)
-      this.$router.push({path: `/${this.baseRoute}/${this.acct}/${this.repo}/${path}`})
-    })
-    
-    let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
-    this.$store.commit('setPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
-    if (pathElems.length > 0) this.$store.commit('setAcct', pathElems[0])
-    if (pathElems.length > 1) this.$store.commit('setRepo', pathElems[1])
-    this.contentPath = await this.githubClient.fullPath(this.acct, this.repo, this.path)
-    this.content = await this.githubClient.getFile(this.acct, this.repo, this.contentPath)
-    console.log(`${this.$options.name}.mounted acct=${this.acct} repo=${this.repo} path=${this.path} contentPath=${this.contentPath}`)
-    
   },
   methods: {
-    selectFile(item:any) {
-      this.$store.commit('setFileSelectorPath', item.to)
-      ;(this as any).$bvModal.show('github-file-selector')
-    },
 
     initEditor() {
-        this.simplemde = new SimpleMDE({
-          previewRender: this.previewRender,
-          // initialValue,
-          autosave: {
-            enabled: true,
-            delay: 10000,
-            // uniqueId: this.userHash
-            uniqueId: 'aaaa'
-          },
-          hideIcons: ['side-by-side', 'fullscreen', 'preview', 'guide'],
-          tabSize: 4
-        })
-        this.simplemde.codemirror.on('drop', (_:any, evt:MouseEvent) => evt.preventDefault())
-        this.simplemde.codemirror.on('drop', (_:any, evt:MouseEvent) => evt.preventDefault())
-      },
+      this.simplemde = new SimpleMDE({
+        previewRender: this.previewRender,
+        // initialValue,
+        autosave: {
+          enabled: false,
+          delay: 10000,
+          // uniqueId: this.userHash
+          uniqueId: 'aaaa'
+        },
+        hideIcons: ['side-by-side', 'fullscreen', 'preview', 'guide'],
+        tabSize: 4
+      })
+      this.simplemde.codemirror.on('drop', (_:any, evt:MouseEvent) => evt.preventDefault())
+      this.simplemde.codemirror.on('drop', (_:any, evt:MouseEvent) => evt.preventDefault())
+    },
 
     previewRender(markdown:string, preview:HTMLElement) {
       if (this.isPreviewActive) {
@@ -196,7 +144,7 @@ export default Vue.extend({
       let e
       if (srcEl.localName  === 'link') {
         e = document.createElement('link')
-        e.href = isDev
+        e.href = process.env.isDev
           ? (srcEl as HTMLLinkElement).href.replace(/https:\/\/unpkg\.com\/visual-essays\/dist\/visual-essays/, wcDevEndpoint)
           : (srcEl as HTMLLinkElement).href
         e.rel = (srcEl as HTMLLinkElement).rel
@@ -213,7 +161,7 @@ export default Vue.extend({
       } else if (srcEl.localName  === 'script') {
         e = document.createElement('script')
         if ((srcEl as HTMLScriptElement).src) {
-          e.src = isDev
+          e.src = process.env.isDev
             ? (srcEl as HTMLScriptElement).src.replace(/https:\/\/unpkg\.com\/visual-essays\/dist\/visual-essays/, wcDevEndpoint)
             : (srcEl as HTMLScriptElement).src
           if ((srcEl as HTMLScriptElement).type) e.type = (srcEl as HTMLScriptElement).type
@@ -230,6 +178,16 @@ export default Vue.extend({
 
   },
   watch: {
+    contentPath: {
+      async handler (contentPath) {
+        let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
+        window.history.replaceState({}, '', `/${path}`)
+        this.content = contentPath
+          ? await this.githubClient.getFile(this.acct, this.repo, contentPath)
+          : ''
+      },
+      immediate: true
+    },
     content(markdown) {
       this.simplemde.value(markdown)
     },
@@ -244,7 +202,16 @@ export default Vue.extend({
 
 </script>
 
+<style>
+
+  .CodeMirror {
+    height: calc(100vh - 200px);
+  }
+
+</style>
+
 <style scoped>
+
   [v-cloak] {
     display: none
   }
@@ -257,6 +224,7 @@ export default Vue.extend({
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100%;
   }
 
   body {
@@ -264,10 +232,11 @@ export default Vue.extend({
     font-family: Roboto, sans-serif;
   }
   
-      .preview .editor-toolbar, .preview .editor-statusbar, .preview .file-selector, .preview .toolbar {display: none}
-
-  .select-file-icon {
-    font-size: 24px;
+  .preview .editor-toolbar,
+  .preview .editor-statusbar,
+  .preview .file-selector,
+  .preview .toolbar {
+    display: none;
   }
 
   .content {
@@ -278,14 +247,7 @@ export default Vue.extend({
     display: flex;
     align-items: center;
   }
-  .breadcrumb {
-    display: flex;
-    align-items: center;
-    margin: 0;
-    height: 40px;
-    padding: 0 0 0 18px;
-    background-color: white;
-  }
+
   .buttons {
     padding: 12px;
     display: flex;

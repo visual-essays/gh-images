@@ -5,17 +5,6 @@
 
     <b-navbar-brand to="/">Juncture Tools</b-navbar-brand>
     
-    <div class="repo-selector" v-if="acct" 
-      v-b-modal.repository-selector 
-      v-b-tooltip.hover :title="isMobile ? '' : 'Select Repository'">
-      <span v-html="acct"></span>:
-      <span v-html="repo"></span>
-    </div>
-    <div v-else>
-      <div class="repo-selector" v-b-modal.repository-selector>Select Repository</div>
-    </div>
-    
-
     <b-collapse id="nav-collapse" is-nav>
       <!-- Inline nav items -->
       <b-navbar-nav>
@@ -33,7 +22,8 @@
   </b-navbar>
   <div style="height:56px;"></div>
 
-  <repository-selector></repository-selector>
+  <repository-selector id="media-repository-selector"></repository-selector>
+  <repository-selector id="essays-repository-selector"></repository-selector>
 
 </div>
 </template>

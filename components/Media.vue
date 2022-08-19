@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-breadcrumb :items="breadCrumbs"></b-breadcrumb>
+    <content-path tool="media"></content-path>
 
     <b-button-group size="sm" class="dir">
       <b-button v-for="dir in dirs" :key="dir" v-html="dir.split('/').pop()" :to="dir" pill></b-button>
@@ -39,12 +39,12 @@ export default Vue.extend({
     viewerWindow: null
   }),
   computed: {
-    acct(): string {return this.$store.state.acct},
-    repo(): string {return this.$store.state.repo},
-    path(): string {return this.$store.state.path},
+    acct(): string {return this.$store.state.mediaAcct},
+    repo(): string {return this.$store.state.mediaRepo},
+    contentPath(): string {return this.$store.state.mediaContentPath},
+    path(): string {return this.$store.state.mediaPath},
     isLoggedIn() {return this.$store.state.authToken !== ''},
     breadCrumbs(): any[] {
-      console.log(this.$route.path)
       let pathElems = this.$route.path.split('/').filter(pe => pe)
       let root = `/${pathElems.slice(0,3).join('/')}`
       let breadCrumbs = [{text: 'root', to: root}]
@@ -54,14 +54,19 @@ export default Vue.extend({
       return breadCrumbs
     }
   },
-  async created() {},
+  created() { console.log(`${this.$options.name}.created`)},
   async mounted() {
+    console.log(`mediaAcct=${this.acct} mediaRepo=${this.repo} mediaContentPath=${this.contentPath}`)
+    this.root = [this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
+    let path = ['media', this.acct, this.repo, ...this.contentPath.split('/')].filter(pe => pe).join('/')
+    window.history.replaceState({}, '', `/${path}`)
+
+    /*
     this.baseRoute = (this.$route.name || '').replace(/-all$/,'').split('/').filter(pe => pe).join('/')
-    console.log(this.$route)
     let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
-    this.$store.commit('setPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
-    if (pathElems.length > 0) this.$store.commit('setAcct', pathElems[0])
-    if (pathElems.length > 1) this.$store.commit('setRepo', pathElems[1])
+    this.$store.commit('setMediaPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
+    if (pathElems.length > 0) this.$store.commit('setMediaAcct', pathElems[0])
+    if (pathElems.length > 1) this.$store.commit('setMediaRepo', pathElems[1])
     this.baseUrl = location.origin
     this.root = [this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
     // this.root = this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : ''
@@ -70,9 +75,11 @@ export default Vue.extend({
       let path = [this.baseRoute, this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
       window.history.replaceState({}, '', `/${path}`)
     }
+    */
   },
   methods: {
     async listContents() {
+      console.log('listContents')
       await fetch(`${api}/dir/${this.root}/`).then(resp => resp.json())
       .then(items => {
         let manifests = new Set()
