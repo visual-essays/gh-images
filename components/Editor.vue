@@ -1,6 +1,6 @@
 <template>
-  <div id="editor">
-    
+  <div id="editor" @paste="paste" @drop="drop" @dragover.prevent @dragover="overDropzone=true" @dragleave="overDropzone=false" :class="{overDropzone}">
+
     <div class="controls">
       <content-path></content-path>
 
@@ -34,13 +34,20 @@ const apiEndpoint = process.env.isDev
     : `https://api.${location.hostname.split('.').slice(1).join('.')}`
 const wcDevEndpoint = 'http://localhost:3333/build'
 
+const iiifEndpoint = process.env.isDev
+  ? 'http://localhost:8088'
+  : location.hostname === 'localhost'
+    ? 'https://iiif.juncture-digital.org'
+    : `https://iiif.${location.hostname.split('.').slice(1).join('.')}`
+
 export default Vue.extend({
   name: 'Editor',
   data: () => ({
     content: '',
     simplemde: <any>{},
     isPreviewActive: false,
-    loadedDependencies: <any[]>[]
+    loadedDependencies: <any[]>[],
+    overDropzone: false
   }),
   computed: {
     acct(): string {return this.$store.state.essaysAcct},
@@ -83,7 +90,7 @@ export default Vue.extend({
         tabSize: 4
       })
       this.simplemde.codemirror.on('drop', (_:any, evt:MouseEvent) => evt.preventDefault())
-      this.simplemde.codemirror.on('drop', (_:any, evt:MouseEvent) => evt.preventDefault())
+      this.simplemde.codemirror.on('paste', (_:any, evt:MouseEvent) => evt.preventDefault())
     },
 
     previewRender(markdown:string, preview:HTMLElement) {
@@ -104,6 +111,73 @@ export default Vue.extend({
             this.loadDependencies(body.querySelectorAll('script'), 0, null)
           })
         return ''
+      }
+    },
+
+    drop(e: DragEvent) {
+      let cursorPos = this.simplemde.codemirror.coordsChar({left:e.pageX, top:e.pageY})
+      let inputText = ''
+      if (e.dataTransfer) inputText = decodeURI(e.dataTransfer.getData('Text') || e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list'))
+      if (inputText && isURL(inputText)) {
+        let url = inputText
+        let parsed = new URL(url)
+        let manifestUrl = parsed.searchParams.get('manifest')
+        if (manifestUrl) {
+          let imageId = manifestUrl.indexOf(iiifEndpoint) > 0 && manifestUrl.indexOf('manifest.json') > 0
+            ? manifestUrl.split('/').slice(-2,-1).pop() as string
+            : manifestUrl as string
+            this.insertAtCursor(cursorPos, `.ve-image ${decodeURIComponent(imageId)}\n`)
+        } else {
+          this.getManifestUrl(url).then((manifestUrl:string) => {
+            let imageId = manifestUrl.split('/').slice(3,-1).join('/')
+            if (cursorPos.line === 0) {
+              this.insertAtCursor(cursorPos, `.ve-header "File Title" ${imageId}\n`)
+            } else {
+              this.insertAtCursor(cursorPos, `.ve-image ${imageId}\n`)
+            }
+          })
+        }
+      }
+    },
+
+    paste(e: ClipboardEvent) {
+      let pastedText = e.clipboardData?.getData('Text') || ''
+      console.log('paste', pastedText)
+      if (isURL(pastedText)) {
+        let url = pastedText
+        let parsed = new URL(url)
+        let manifestUrl = parsed.searchParams.get('manifest')
+        if (manifestUrl) {
+          let imageId = manifestUrl.indexOf(iiifEndpoint) > 0 && manifestUrl.indexOf('manifest.json') > 0
+            ? manifestUrl.split('/').slice(-2,-1).pop() as string
+            : manifestUrl as string
+            this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
+        } else {
+          this.getManifestUrl(url).then((manifestUrl:string) => {
+            let imageId = manifestUrl.split('/').slice(3,-1).join('/')
+            this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
+          })
+        }
+      }
+    },
+
+    async getManifestUrl(imageUrl: string) {
+      let resp = await fetch(`${process.env.isDev ? 'http://localhost:8088' : iiifEndpoint}/?url=${encodeURIComponent(imageUrl)}`)
+      return await resp.text()
+    },
+
+    insertAtCursor(pos:any, text:string) {
+      let priorLine = this.simplemde.codemirror.getRange({line:pos.line-2, char:0}, pos).trim().split(/\s/)
+      if (priorLine.length > 0 && priorLine[0] === '.ve-image') {
+        let merged = '.ve-image\n'
+        merged += `    - ${priorLine.slice(1).join(' ')}\n`
+        merged += `    - ${text.split(/\s/).slice(1).join(' ')}\n`
+        this.simplemde.codemirror.setSelection({line:pos.line-1,ch:0}, {line:pos.line})
+        this.simplemde.codemirror.replaceSelection(merged)
+      } else {
+        pos.ch = 0
+        this.simplemde.codemirror.setSelection(pos, pos)
+        this.simplemde.codemirror.replaceSelection(text)
       }
     },
 
@@ -215,6 +289,7 @@ export default Vue.extend({
   }
 })
 
+function isURL(str:string) { return /^https*:\/\//.test(str) }
 </script>
 
 <style>
