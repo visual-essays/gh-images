@@ -14,13 +14,13 @@
       <div class="dirList">
 
         <ul v-if="dirs.length > 0" size="sm" class="dirs">
-          <li v-for="dir in dirs" :key="dir" class="dir" @click="update(`${curDir}/${dir}`)">
+          <li v-for="dir, idx in dirs" :key="`dir-${idx}`" class="dir" @click="update(`${curDir}/${dir}`)">
             <fa :icon="faFolder" title="Folder"></fa>{{dir.split('/').pop()}}
           </li>
         </ul>
 
         <ul class="files" v-if="!foldersOnly && files.length > 0">
-          <li :class="`file${file.name === selectedFile ? ' selected' : ''}`" v-for="file in files" :key="file.sha">
+          <li :class="`file${file.name === selectedFile ? ' selected' : ''}`" v-for="file, idx in files" :key="`file-${idx}`">
             <span v-html="file.name" @click="fileSelected(file)"></span>
             <span v-b-tooltip.hover title="Delete file" class="trashcan" @click="deleteFile(file)">
               <fa class="trash-icon" :icon="faTrashCan"></fa>

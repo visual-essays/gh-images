@@ -56,14 +56,15 @@ export class GithubClient {
       resp = await resp.json()
       content = decodeURIComponent(escape(atob(resp.content)))
     }
-    return Promise.resolve(content)
+    return Promise.resolve({content, sha: resp.sha})
   }
 
-  async putFile(acct:string, repo:string, path:string, content:any, ref:string): Promise<any> {
+  async putFile(acct:string, repo:string, path:string, content:any, sha:string, ref:string): Promise<any> {
     console.log(`putFile: acct=${acct} repo=${repo} ref=${ref} path=${path}`)
     let url = `https://api.github.com/repos/${acct}/${repo}/contents/${path}`
     if (ref) url += `?ref=${ref}`
-    let payload = { message: 'API commit', ref: ref, content: btoa(content) }
+    console.log(url)
+    let payload = { message: 'API commit', ref: ref, content: btoa(content), sha }
     let resp = await fetch(url, { method: 'PUT', body: JSON.stringify(payload), headers: {Authorization: `Token ${this.authToken}`} })
     resp = await resp.json()
   }
@@ -78,7 +79,7 @@ export class GithubClient {
   }
 
   defaultBranch(acct:string, repo:string) {
-    return 'main'
+    return 'main'  // TODO
   }
 
   async dirlist(acct:string, repo:string, path:string, ref:string): Promise<any[]> {
@@ -129,11 +130,6 @@ export class GithubClient {
     let fullPath = pathElems.join('/')
     console.log(`fullPath=${fullPath}`)
     return fullPath
-  }
-
-  async newFolder(acct:string, repo:string, path:string, ref:string): Promise<any[]> {
-    console.log(`newFolder: acct=${acct} repo=${repo} ref=${ref} path=${path}`)
-    return this.putFile(acct, repo, `${path}/.deleteMe`, '', ref)
   }
 
 }

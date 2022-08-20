@@ -1,20 +1,23 @@
 <template>
-  <div id="editor" @paste="paste" @drop="drop" @dragover.prevent @dragover="overDropzone=true" @dragleave="overDropzone=false" :class="{overDropzone}">
+  <div id="editor" ref="editor" @paste="paste" @drop="drop" @dragover.prevent @dragover="overDropzone=true" @dragleave="overDropzone=false" :class="{overDropzone}">
 
     <div class="controls">
       <content-path></content-path>
 
       <div class="buttons">
-        <span @click="showHelp" v-b-tooltip.hover title="Show Help Documentation"><fa :icon="helpIcon"></fa></span>
-        <span @click="saveFile" v-b-tooltip.hover title="Save Essay"><fa :icon="saveIcon"></fa></span>
-        <span @click="copyLink" v-b-tooltip.hover title="Copy Essay Link"><fa :icon="linkIcon"></fa></span>
-        <span @click="copyText" v-b-tooltip.hover title="Copy Essay Text"><fa :icon="copyIcon"></fa></span>
-        <span @click="launch" v-b-tooltip.hover title="View Essay"><fa :icon="launchIcon"></fa></span>
-        <span @click="togglePreview" v-b-tooltip.hover title="Toggle Essay Preview"><fa :icon="previewIcon"></fa></span>
+        <span @click="showHelp" v-b-tooltip.hover :title="isMobile ? '' : 'Show Help Documentation'"><fa :icon="helpIcon"></fa></span>
+        <span v-if="isLoggedIn" @click="saveFile" v-b-tooltip.hover :title="isMobile ? '' : 'Save Essay'"><fa :icon="saveIcon"></fa></span>
+        <span @click="copyLink" v-b-tooltip.hover :title="isMobile ? '' : 'Copy Essay Link'"><fa :icon="linkIcon"></fa></span>
+        <span @click="copyText" v-b-tooltip.hover :title="isMobile ? '' : 'Copy Essay Text'"><fa :icon="copyIcon"></fa></span>
+        <span @click="launch" v-b-tooltip.hover :title="isMobile ? '' : 'View Essay'"><fa :icon="launchIcon"></fa></span>
+        <span @click="togglePreview" v-b-tooltip.hover :title="isMobile ? '' : 'Toggle Essay Preview'"><fa :icon="previewIcon"></fa></span>
       </div>
     </div>
 
     <textarea v-cloak ref="content"></textarea>
+
+    <b-button pill class="fab" variant="primary" @click="togglePreview">+</b-button>
+
   </div>
 </template>
 
@@ -34,6 +37,10 @@ const apiEndpoint = process.env.isDev
     : `https://api.${location.hostname.split('.').slice(1).join('.')}`
 const wcDevEndpoint = 'http://localhost:3333/build'
 
+const webappHost = process.env.isDev
+  ? 'http://localhost:8080'
+  : 'https://beta.juncture-digital.org'
+
 const iiifEndpoint = process.env.isDev
   ? 'http://localhost:8088'
   : location.hostname === 'localhost'
@@ -44,17 +51,22 @@ export default Vue.extend({
   name: 'Editor',
   data: () => ({
     content: '',
+    sha: '',
     simplemde: <any>{},
     isPreviewActive: false,
     loadedDependencies: <any[]>[],
-    overDropzone: false
+    overDropzone: false,
+    externalWindow: <any>null
   }),
   computed: {
     acct(): string {return this.$store.state.essaysAcct},
     repo(): string {return this.$store.state.essaysRepo},
     ref(): string {return this.$store.state.essaysRef},
+    path(): string {return this.$store.state.essaysPath},
     contentPath(): string {return this.$store.state.essaysContentPath},
     authToken(): string {return this.$store.state.authToken},
+    isLoggedIn() {return this.$store.state.authToken !== ''},
+    isMobile(): string {return this.$store.state.isMobile},
     githubClient() {return this.$store.state.githubClient},
     
     launchIcon() { return faArrowUpRightFromSquare },
@@ -144,20 +156,20 @@ export default Vue.extend({
       let pastedText = e.clipboardData?.getData('Text') || ''
       console.log('paste', pastedText)
       if (isURL(pastedText)) {
-        let url = pastedText
-        let parsed = new URL(url)
-        let manifestUrl = parsed.searchParams.get('manifest')
+        let manifestUrl = (new URL(pastedText)).searchParams.get('manifest')
         if (manifestUrl) {
           let imageId = manifestUrl.indexOf(iiifEndpoint) > 0 && manifestUrl.indexOf('manifest.json') > 0
             ? manifestUrl.split('/').slice(-2,-1).pop() as string
             : manifestUrl as string
-            this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
+          this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
         } else {
-          this.getManifestUrl(url).then((manifestUrl:string) => {
+          this.getManifestUrl(pastedText).then((manifestUrl:string) => {
             let imageId = manifestUrl.split('/').slice(3,-1).join('/')
             this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
           })
         }
+      } else {
+        this.simplemde.codemirror.replaceSelection(pastedText)
       }
     },
 
@@ -187,11 +199,16 @@ export default Vue.extend({
     },
     
     showHelp() {
-      console.log('showHelp')
+      this.openWindow(`${webappHost}/a3b5125/help/`, `toolbar=no,location=no,left=0,top=0,width=800,height=800,scrollbars=no,status=no`)
     },
   
-    saveFile() {
-      console.log('saveFile')
+    async saveFile() {
+      console.log('saveFile', this.contentPath)
+      if (this.isLoggedIn) {
+        let markdown = this.simplemde.value()
+        let status = await this.githubClient.putFile(this.acct, this.repo, this.contentPath, markdown, this.sha, this.ref)
+        console.log(status)
+      }
     },
   
     copyLink() {
@@ -199,13 +216,21 @@ export default Vue.extend({
     },
   
     copyText() {
-      console.log('copyText')
+      navigator.clipboard.writeText(this.simplemde.value())
     },
   
     launch() {
-      console.log('launch')
+      let url = `${webappHost}/${this.acct}/${this.repo}/${this.path}`
+      if (this.ref) url += `?ref=${this.ref}`
+      window.open(url, '_blank')
     },
   
+    openWindow(url:string, options:any) {
+      if (this.externalWindow) { this.externalWindow.close() }
+      if (options === undefined) options = 'toolbar=yes,location=yes,left=0,top=0,width=1000,height=1200,scrollbars=yes,status=yes'
+      this.externalWindow = window.open(url, '_blank', options)
+    },
+    
     loadDependencies(dependencies:any, i:number, callback:any) {
       if (dependencies.length > 0) {
         this.load(dependencies.item(i), () => {
@@ -259,34 +284,37 @@ export default Vue.extend({
         console.log(`${this.$options.name}.watch.contentPath`)
         let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
         window.history.replaceState({}, '', `/${path}`)
-        this.content = contentPath
-          ? await this.githubClient.getFile(this.acct, this.repo, contentPath, this.ref)
-          : ''
+        let resp = await this.githubClient.getFile(this.acct, this.repo, contentPath, this.ref)
+        console.log(resp)
+        this.content = resp.content
+        this.sha = resp.sha
       },
       immediate: true
     },
 
     ref: {
-      async handler (ref) {
-        console.log(`${this.$options.name}.watch.ref`)
-        let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
-        window.history.replaceState({}, '', `/${path}`)
-        this.content = await this.githubClient.getFile(this.acct, this.repo, this.contentPath, ref)
+      async handler (ref, prior) {
+        console.log(`${this.$options.name}.watch.ref=${ref} prior=${prior}`)
+        if (prior !== undefined) {
+          let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
+          window.history.replaceState({}, '', `/${path}`)
+          this.content = await this.githubClient.getFile(this.acct, this.repo, this.contentPath, ref)
+        }
       },
       immediate: true
     },
 
     content(markdown) {
+      console.log('content', markdown)
       this.simplemde.value(markdown)
     },
 
-    /*
     isPreviewActive(isActive) {
-      if (isActive) this.$refs.main.classList.add('preview')
-      else this.$refs.main.classList.remove('preview')
+      if (isActive) (this.$refs.editor as HTMLElement)?.classList.add('preview')
+      else (this.$refs.editor as HTMLElement)?.classList.remove('preview')
     }
-    */
-  }
+
+}
 })
 
 function isURL(str:string) { return /^https*:\/\//.test(str) }
@@ -296,6 +324,17 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
 
   .CodeMirror {
     height: calc(100vh - 200px);
+  }
+
+  .preview .CodeMirror {
+    height: 100vh;
+  }
+  .preview .editor-toolbar {
+    display: none;
+  }
+
+  .preview .editor-preview {
+    padding: 0;
   }
 
 </style>
@@ -317,16 +356,20 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
     height: 100%;
   }
 
+  #editor.preview {
+    height: unset;
+  }
+
+  .editor-toolbar {
+    display: none;
+  }
+  .preview .controls {
+    display: none;
+  }
+
   body {
     margin: 12px;
     font-family: Roboto, sans-serif;
-  }
-  
-  .preview .editor-toolbar,
-  .preview .editor-statusbar,
-  .preview .file-selector,
-  .preview .toolbar {
-    display: none;
   }
 
   .content {
@@ -344,6 +387,37 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
     gap: 9px;
     margin-left: auto;
     font-size: 20px;
+  }
+
+  .preview .fab {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    z-index: 10;
+  }
+
+  /* Mobile Devices */
+  @media (max-width: 480px) {
+
+    .CodeMirror {
+      height: calc(100vh - 280px);
+    }
+
+    .controls {
+      flex-direction: column;
+      align-items: unset;
+    }
+
+    main {
+      padding: 0;
+    }
+
+  }
+
+  /* Larger Devices */
+  @media (min-width: 481px) {
   }
 
 </style>

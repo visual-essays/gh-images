@@ -55,7 +55,6 @@ export default Vue.extend({
       for (let i = 0; i < pathElems.length; i++) {
         breadCrumbs.push({text: pathElems[i], to: `/${pathElems.slice(0,i+1).join('/')}`})
       }
-      console.log('breadCrumbs', breadCrumbs)
       return breadCrumbs
     }
   },
@@ -198,5 +197,21 @@ export default Vue.extend({
     padding: 0 0 0 18px;
     background-color: white;
   }
+
+  /* Mobile Devices */
+  @media (max-width: 480px) {
+
+    .path, .breadcrumb {
+      flex-direction: column;
+      align-items: unset;
+      padding: 0;
+    }
+
+  }
+
+  /* Larger Devices */
+  @media (min-width: 481px) {
+  }
+
 
 </style>
