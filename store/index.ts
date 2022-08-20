@@ -3,13 +3,17 @@ import { GithubClient } from '../gh-utils'
 export const state = () => ({
   mediaAcct: localStorage.getItem('gh-media-acct') || '',
   mediaRepo: localStorage.getItem('gh-media-repo') || '',
+  mediaRef: localStorage.getItem('gh-media-ref') || '',
   mediaPath: localStorage.getItem('gh-media-path') || '',
   mediaContentPath: localStorage.getItem('gh-media-content-path') || '',
-  
+  mediaDirList: <any[]>[],
+
   essaysAcct: localStorage.getItem('gh-essays-acct') || '',
   essaysRepo: localStorage.getItem('gh-essays-repo') || '',
+  essaysRef: localStorage.getItem('gh-essays-ref') || '',
   essaysPath: localStorage.getItem('gh-essays-path') || '',
   essaysContentPath: localStorage.getItem('gh-essays-content-path') || '',
+  essaysDirList: <any[]>[],
 
   fileSelectorPath: '',
   
@@ -32,6 +36,11 @@ export const mutations = {
     if (repo) localStorage.setItem('gh-media-repo', repo)
     else localStorage.removeItem('gh-media-repo')
   },
+  setMediaRef (state: any, ref: string) {
+    state.mediaRef = ref
+    if (ref) localStorage.setItem('gh-media-ref', ref)
+    else localStorage.removeItem('gh-media-ref')
+  },
   setMediaPath (state: any, path: string) {
     state.mediaPath = path
     if (path) localStorage.setItem('gh-media-path', path)
@@ -39,8 +48,12 @@ export const mutations = {
   },
   setMediaContentPath (state: any, path: string) {
     state.mediaContentPath = path
+    console.log(`setMediaContentPath`, path)
     if (path) localStorage.setItem('gh-media-content-path', path)
     else localStorage.removeItem('gh-media-content-path')
+  },
+  setMediaDirList (state: any, dirList: any[]) {
+    state.mediaDirList = dirList
   },
 
   setEssaysAcct (state: any, acct: string) {
@@ -53,6 +66,11 @@ export const mutations = {
     if (repo) localStorage.setItem('gh-essays-repo', repo)
     else localStorage.removeItem('gh-essays-repo')
   },
+  setEssaysRef (state: any, ref: string) {
+    state.essaysRef = ref
+    if (ref) localStorage.setItem('gh-essays-ref', ref)
+    else localStorage.removeItem('gh-essays-ref')
+  },
   setEssaysPath (state: any, path: string) {
     state.essaysPath = path
     if (path) localStorage.setItem('gh-essays-path', path)
@@ -62,6 +80,9 @@ export const mutations = {
     state.essaysContentPath = path
     if (path) localStorage.setItem('gh-essays-content-path', path)
     else localStorage.removeItem('gh-essays-content-path')
+  },
+  setEssaysDirList (state: any, dirList: any[]) {
+    state.essaysDirList = dirList
   },
 
   setFileSelectorPath (state: any, path: string) { state.fileSelectorPath = path },

@@ -1,23 +1,26 @@
 <template>
   <div class="main">
 
-    <div class="repo-selector" v-if="acct" 
-      @click="selectRepository"
-      v-b-tooltip.hover :title="isMobile ? '' : 'Select Repository'">
-      <span v-html="acct"></span>:
-      <span v-html="repo"></span>
-    </div>
-    <div v-else>
-      <div class="repo-selector" @click="selectRepository">Select Repository</div>
-    </div>
+    <div class="path">
+      <div class="repo-selector" v-if="acct" 
+        @click="selectRepository"
+        v-b-tooltip.hover :title="isMobile ? '' : 'Select Repository'">
+        <span v-html="acct"></span>:
+        <span v-html="repo"></span>
+        <span v-if="ref"> ({{ref}})</span>
+      </div>
+      <div v-else>
+        <div class="repo-selector" @click="selectRepository">Select Repository</div>
+      </div>
 
-    <div class="breadcrumb">
-      <b-breadcrumb v-if="acct">
-        <b-breadcrumb-item v-for="item, idx in breadCrumbs" :key="`bc-${idx}`" 
-          @click="selectFile(item)"
-          :html="item.text"
-        ></b-breadcrumb-item>
-      </b-breadcrumb>
+      <div class="breadcrumb">
+        <b-breadcrumb v-if="acct">
+          <b-breadcrumb-item v-for="item, idx in breadCrumbs" :key="`bc-${idx}`" 
+            @click="selectFile(item)"
+            :html="item.text"
+          ></b-breadcrumb-item>
+        </b-breadcrumb>
+      </div>
     </div>
 
   </div>
@@ -38,46 +41,76 @@ export default Vue.extend({
     toolTitleCase(): string {return this.tool.charAt(0).toUpperCase() + this.tool.slice(1).toLowerCase()},
     acct(): string {return this.$store.state[`${this.tool}Acct`]},
     repo(): string {return this.$store.state[`${this.tool}Repo`]},
+    ref(): string {return this.$store.state[`${this.tool}Ref`]},
+    root(): string {return this.acct && this.repo ? `${this.acct}/${this.repo}` : ''},
     path(): string {return this.$store.state[`${this.tool}Path`]},
+    dirList(): string {return this.$store.state[`${this.tool}DirList`]},
     contentPath(): string {return this.$store.state[`${this.tool}ContentPath`]},
     githubClient(): any {return this.$store.state.githubClient},
     isMobile(): boolean {return this.$store.state.isMobile},
     breadCrumbs(): any[] {
       let root = ''
       let breadCrumbs = [{text: 'root', to: root}]
-      // let breadCrumbs = []
       let pathElems = this.contentPath.split('/').filter(pe => pe)
       for (let i = 0; i < pathElems.length; i++) {
-        breadCrumbs.push({text: pathElems[i], to: `${root}/${pathElems.slice(0,i+1).join('/')}`})
+        breadCrumbs.push({text: pathElems[i], to: `/${pathElems.slice(0,i+1).join('/')}`})
       }
+      console.log('breadCrumbs', breadCrumbs)
       return breadCrumbs
     }
   },
-  created() {},
+  created() {
+    console.log(this.$route)
+  },
   mounted() {
-
+    console.log('contentPath.mounted')
     this.$root.$on('github-path-changed', (path: string) => {
       console.log(`github-path-changed: tool=${this.tool} path=${path}`)
       path = path.replace(/\/README\.md$/,'').replace(/\.md$/,'')
       this.$store.commit(`set${this.toolTitleCase}ContentPath`, path)
-      this.$router.push({path: `/${this.baseRoute}/${this.acct}/${this.repo}/${path}`})
+      this.$router.push({path: `/${this.baseRoute}/${this.acct}/${this.repo}/${path}`, query: {ref: this.ref}})
     })
     
     let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
-
-    if (pathElems.length > 2) {
-      this.$store.commit(`set${this.toolTitleCase}Path`, pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
-    }
+    this.$store.commit(`set${this.toolTitleCase}Path`, pathElems.length > 2 ? pathElems.slice(2).join('/') : this.path)
     if (pathElems.length > 0) this.$store.commit(`set${this.toolTitleCase}Acct`, pathElems[0])
     if (pathElems.length > 1) this.$store.commit(`set${this.toolTitleCase}Repo`, pathElems[1])
-    console.log(`${this.$options.name}.mounted acct=${this.acct} repo=${this.repo} path=${this.path} contentPath=${this.contentPath}`)
+    
+    console.log(`tool=${this.tool} ref=${this.$route.query.ref}`)
+    if (this.$route.query.ref) this.$store.commit(`set${this.toolTitleCase}Ref`, this.$route.query.ref)
+
+    this.$store.commit(`set${this.toolTitleCase}DirList`, [])
+
+
+    this.githubClient.fullPath(this.acct, this.repo, this.path, null, this.tool === 'media')
+      .then((contentPath:string) => {
+        this.$store.commit(`set${this.toolTitleCase}ContentPath`, contentPath)
+        return contentPath
+      })
+      .then((contentPath:string) => {
+        this.githubClient.dirlist(this.acct, this.repo, contentPath)
+        .then((dirList:any[]) => this.$store.commit(`set${this.toolTitleCase}DirList`, dirList))
+      })
+    
+    let browserPath = `/${this.tool}/${this.root}${this.path ? '/'+this.path : ''}`
+    if (this.ref) browserPath += `?ref=${this.ref}`
+    window.history.replaceState({}, '', browserPath)
+    console.log(`browserPath=${browserPath}`)
+
+    console.log(`${this.$options.name}.mounted acct=${this.acct} repo=${this.repo} ref=${this.ref} path=${this.path} contentPath=${this.contentPath}`)
+
   },
   methods: {
 
     selectFile(item:any) {
-      console.log('selectFile', this.tool)
-      this.$store.commit('setFileSelectorPath', item.to)
-      ;(this as any).$bvModal.show(`${this.tool}-file-selector`)
+      console.log('selectFile', this.tool, item)
+      if (this.tool === 'media') {
+        this.$router.push({path: `/${this.tool}/${this.root}${item.to}`})
+        this.$store.commit(`set${this.toolTitleCase}Path`, item.to)
+      } else {
+        this.$store.commit('setFileSelectorPath', item.to)
+        ;(this as any).$bvModal.show(`${this.tool}-file-selector`)
+      }
     },
 
     selectRepository() {
@@ -87,33 +120,44 @@ export default Vue.extend({
   },
   watch: {
   
-    acct: {
-      async handler(acct) {
-        this.$store.commit(`set${this.toolTitleCase}ContentPath`, '')
-        if (acct) this.$store.commit(`set${this.toolTitleCase}ContentPath`, await this.githubClient.fullPath(this.acct, this.repo, this.path)) 
-      },
-      immediate: false
-    },
-
-    repo: {
-      async handler(repo) {
-        this.$store.commit(`set${this.toolTitleCase}ContentPath`, '')
-        if (repo) this.$store.commit(`set${this.toolTitleCase}ContentPath`, await this.githubClient.fullPath(this.acct, this.repo, this.path)) 
+    root: {
+      async handler(root) {
+        console.log(`${this.$options.name}.watch.root: root=${this.root}`)
+        this.$store.commit(`set${this.toolTitleCase}Path`, '')
+        this.$router.push({path: `/${this.baseRoute}/${root}`, query: this.ref ? {ref:this.ref} : {} })
       },
       immediate: false
     },
 
     path: {
       async handler(repo) {
-        this.$store.commit(`set${this.toolTitleCase}ContentPath`, '')
-        if (repo) this.$store.commit(`set${this.toolTitleCase}ContentPath`, await this.githubClient.fullPath(this.acct, this.repo, this.path)) 
+        console.log(`${this.$options.name}.watch.path: path=${this.path}`)
+        if (repo) this.$store.commit(`set${this.toolTitleCase}ContentPath`, await this.githubClient.fullPath(this.acct, this.repo, this.path, null, this.tool === 'media')) 
       },
       immediate: false
     },
 
-    conrentPath() {
-      let path = ['media', this.acct, this.repo, ...this.contentPath.split('/')].filter(pe => pe).join('/')
-      window.history.replaceState({}, '', `/${path}`)
+    contentPath: {
+      async handler() {
+        console.log(`${this.$options.name}.watch.root: contentPath=${this.contentPath}`)
+        //let dirList = await this.githubClient.dirlist(this.acct, this.repo, this.contentPath)
+        //this.dirs = dirList.filter((item:any) => item.type === 'dir')
+        //.map((item:any) => `/${this.tool}/${this.acct}/${this.repo}/${this.contentPath}/${item.name}`)  
+        
+        this.$store.commit(`set${this.toolTitleCase}DirList`, await this.githubClient.dirlist(this.acct, this.repo, this.contentPath))
+        console.log('dirList', this.dirList)
+        //let path = ['media', this.acct, this.repo, ...this.contentPath.split('/')].filter(pe => pe).join('/')
+        //window.history.replaceState({}, '', `/${path}`)
+      },
+      immediate: false
+    },
+
+    ref: {
+      async handler(ref) {
+        console.log(`${this.$options.name}.watch.ref: ref=${this.ref}`)
+        this.$router.push({path: `/${this.baseRoute}/${this.root}`, query: ref ? {ref} : {}})
+      },
+      immediate: false
     }
 
   }
@@ -124,6 +168,13 @@ export default Vue.extend({
 <style scoped>
 
   .main {
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    align-items: flex-start;
+  }
+
+  .path {
     display: flex;
     align-items: center;
     padding: 6px;

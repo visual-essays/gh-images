@@ -1,11 +1,12 @@
 <template>
   <div>
+
     <content-path tool="media"></content-path>
 
-    <b-button-group size="sm" class="dir">
+    <b-button-group size="sm">
       <b-button v-for="dir in dirs" :key="dir" v-html="dir.split('/').pop()" :to="dir" pill></b-button>
     </b-button-group>
-
+  
     <ve-image-grid as-cards >
       <ul>
         <li v-for="manifest, idx in manifests" :key="`grid-${idx}`" v-html="manifest"></li>
@@ -22,7 +23,6 @@
 
 import Vue from 'vue'
 
-const api = 'https://api.juncture-digital.org'
 const iiifServer = 'https://iiif.juncture-digital.org'
 
 const fileExtensions = new Set(['yaml','jpg','jpeg','jp2','png','tif','tiff'])
@@ -30,93 +30,32 @@ const ignore = new Set(['iiif-props.yaml', 'iiif-props.template.yaml'])
 
 export default Vue.extend({
   name: 'Media',
-  data: () => ({
-    baseRoute: '',
-    root: '',
-    baseUrl: '',
-    dirs: <string[]>[],
-    manifests: <any[]>[],
-    viewerWindow: null
-  }),
+  data: () => ({}),
   computed: {
+    dirList(): any[] {return this.$store.state.mediaDirList},
     acct(): string {return this.$store.state.mediaAcct},
     repo(): string {return this.$store.state.mediaRepo},
-    contentPath(): string {return this.$store.state.mediaContentPath},
     path(): string {return this.$store.state.mediaPath},
-    isLoggedIn() {return this.$store.state.authToken !== ''},
-    breadCrumbs(): any[] {
-      let pathElems = this.$route.path.split('/').filter(pe => pe)
-      let root = `/${pathElems.slice(0,3).join('/')}`
-      let breadCrumbs = [{text: 'root', to: root}]
-      for (let i = 3; i < pathElems.length; i++) {
-        breadCrumbs.push({text: pathElems[i], to: `${root}/${pathElems.slice(i,i+1).join('/')}`})
-      }
-      return breadCrumbs
-    }
-  },
-  created() { console.log(`${this.$options.name}.created`)},
-  async mounted() {
-    console.log(`mediaAcct=${this.acct} mediaRepo=${this.repo} mediaContentPath=${this.contentPath}`)
-    this.root = [this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
-    let path = ['media', this.acct, this.repo, ...this.contentPath.split('/')].filter(pe => pe).join('/')
-    window.history.replaceState({}, '', `/${path}`)
-
-    /*
-    this.baseRoute = (this.$route.name || '').replace(/-all$/,'').split('/').filter(pe => pe).join('/')
-    let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
-    this.$store.commit('setMediaPath', pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
-    if (pathElems.length > 0) this.$store.commit('setMediaAcct', pathElems[0])
-    if (pathElems.length > 1) this.$store.commit('setMediaRepo', pathElems[1])
-    this.baseUrl = location.origin
-    this.root = [this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
-    // this.root = this.acct && this.repo ? `${this.acct}/${this.repo}` + (this.path ? `/${this.path}` : '') : ''
-    console.log(`${this.$options.name}.mounted acct=${this.acct} repo=${this.repo} path=${this.path} baseUrl=${this.baseUrl} root=${this.root}`)
-    if (this.acct && this.repo) {
-      let path = [this.baseRoute, this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
-      window.history.replaceState({}, '', `/${path}`)
-    }
-    */
-  },
-  methods: {
-    async listContents() {
-      console.log('listContents')
-      await fetch(`${api}/dir/${this.root}/`).then(resp => resp.json())
-      .then(items => {
-        let manifests = new Set()
-        let dirs: string[] = []
-        items.forEach((item:any) => {
-          if (item.type === 'dir') {
-            let path = [this.baseRoute, this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/')
-            dirs.push(`/${path}/${item.name}`)
-          } else {
-            if (!ignore.has(item.name)) {
-              let elems = item.name.split('.')
-              let name = elems.slice(0,-1).join('.')
-              let extension = elems.pop().toLowerCase()
-              if (fileExtensions.has(extension)) {                
-                manifests.add(`${iiifServer}/gh:${this.root}/${encodeURIComponent(name)}/manifest.json`)
-              }
-            }
-          }
-        })
-        this.dirs = dirs
-        this.manifests = Array.from(manifests).sort()
-      })     
-    }
-  },
-  watch: {
-    root: {
-      async handler(root) {
-        if (root) this.listContents()
-     },
-      immediate: true
+    root(): string {return [this.acct, this.repo, ...this.path.split('/')].filter(pe => pe).join('/') },
+    manifests(): string[] {return Array.from(new Set((this.dirList || [])
+      .filter((item:any) => item.type === 'file')
+      .filter((item:any) => !ignore.has(item.name))
+      .filter((item:any) => fileExtensions.has(item.name.split('.').pop().toLowerCase()))
+      .map((item:any) => `${iiifServer}/gh:${this.root}/${encodeURIComponent(item.name.split('.').slice(0,-1).join('.'))}/manifest.json`)))
     },
-
-    manifests(manifests) {
-      console.log(`manifests=${manifests.length}`)
-    }
-  
-  }
+    dirs(): string[] {return (this.dirList || []) 
+          .filter((item:any) => item.type === 'dir')
+          .map((item:any) => `/media/${this.root}/${item.name}`)
+    },
+    isLoggedIn() {return this.$store.state.authToken !== ''}
+    ,
+  },
+  created() {},
+  async mounted() {
+    console.log(`${this.$options.name}.mounted`, this.dirList)
+  },
+  methods: {},
+  watch: {}
 })
 
 </script>
@@ -133,20 +72,6 @@ export default Vue.extend({
   body {
     margin: 12px;
     font-family: Roboto, sans-serif;
-  }
-  
-  .name {
-    margin-right: 12px;
-    cursor: pointer;
-  }    
-  
-  .name:hover {
-    font-weight: bold;
-  }
-  
-  .breadcrumb {
-    margin-bottom: 0;
-    padding: .5rem;
   }
   
   .dir.btn-group {

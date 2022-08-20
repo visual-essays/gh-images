@@ -30,7 +30,16 @@ export class GithubClient {
       : org
         ? `orgs/${org}`
         : 'user'
-    return fetch(`https://api.github.com/${pathPrefix}/repos?per_page=100` ,{
+    return fetch(`https://api.github.com/${pathPrefix}/repos?per_page=100`, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `token ${this.authToken}`
+      }
+    }).then(resp => resp.json())
+  }
+
+  branches(acct:string, repo:string) {
+    return fetch(`https://api.github.com/repos/${acct}/${repo}/branches`, {
       headers: {
         Accept: 'application/vnd.github+json',
         Authorization: `token ${this.authToken}`
@@ -99,8 +108,8 @@ export class GithubClient {
     return files
   }
 
-  async fullPath(acct:string, repo:string, path:string, ref:string): Promise<string> {
-    console.log(`GithubClient.fullPath: acct=${acct} repo=${repo} path=${path} ref=${ref}`)
+  async fullPath(acct:string, repo:string, path:string, ref:string, foldersOnly = false): Promise<string> {
+    console.log(`GithubClient.fullPath: acct=${acct} repo=${repo} path=${path} ref=${ref} foldersOnly=${foldersOnly}`)
     let pathElems = path.split('/').filter(pe => pe)
     let leafElem = pathElems[pathElems.length-1]
     let dirList = await this.dirlist(acct, repo, pathElems.join('/'), ref)
@@ -108,14 +117,17 @@ export class GithubClient {
       pathElems.pop()
       dirList = await this.dirlist(acct, repo, pathElems.join('/'), ref)
     }
-    let toFind = [leafElem, `${leafElem}.md`, 'README.md']
-    for (let i = 0; i < toFind.length; i++) {
-      if (dirList.find(item => item.type === 'file' && (item.name === toFind[i]))) {
-        pathElems.push(toFind[i])
-        break
+    if (!foldersOnly) {
+      let toFind = [leafElem, `${leafElem}.md`, 'README.md']
+      for (let i = 0; i < toFind.length; i++) {
+        if (dirList.find(item => item.type === 'file' && (item.name === toFind[i]))) {
+          pathElems.push(toFind[i])
+          break
+        }
       }
     }
     let fullPath = pathElems.join('/')
+    console.log(`fullPath=${fullPath}`)
     return fullPath
   }
 

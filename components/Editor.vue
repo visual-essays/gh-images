@@ -45,6 +45,7 @@ export default Vue.extend({
   computed: {
     acct(): string {return this.$store.state.essaysAcct},
     repo(): string {return this.$store.state.essaysRepo},
+    ref(): string {return this.$store.state.essaysRef},
     contentPath(): string {return this.$store.state.essaysContentPath},
     authToken(): string {return this.$store.state.authToken},
     githubClient() {return this.$store.state.githubClient},
@@ -62,7 +63,7 @@ export default Vue.extend({
     if (this.acct && this.repo) {
       console.log(`essaysAcct=${this.acct} essaysRepo=${this.repo} essaysContentPath=${this.contentPath}`)
       let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
-      window.history.replaceState({}, '', `/${path}`)
+      //window.history.replaceState({}, '', `/${path}`)
     }
     this.initEditor()
   },
@@ -178,19 +179,33 @@ export default Vue.extend({
 
   },
   watch: {
+
     contentPath: {
       async handler (contentPath) {
+        console.log(`${this.$options.name}.watch.contentPath`)
         let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
         window.history.replaceState({}, '', `/${path}`)
         this.content = contentPath
-          ? await this.githubClient.getFile(this.acct, this.repo, contentPath)
+          ? await this.githubClient.getFile(this.acct, this.repo, contentPath, this.ref)
           : ''
       },
       immediate: true
     },
+
+    ref: {
+      async handler (ref) {
+        console.log(`${this.$options.name}.watch.ref`)
+        let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
+        window.history.replaceState({}, '', `/${path}`)
+        this.content = await this.githubClient.getFile(this.acct, this.repo, this.contentPath, ref)
+      },
+      immediate: true
+    },
+
     content(markdown) {
       this.simplemde.value(markdown)
     },
+
     /*
     isPreviewActive(isActive) {
       if (isActive) this.$refs.main.classList.add('preview')

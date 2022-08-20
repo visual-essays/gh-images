@@ -18,6 +18,7 @@
       </div>
 
       <b-input-group>
+
       <b-form-select
           v-if="mode === 'memberOf'"
           v-model="selectedAcct"
@@ -43,6 +44,16 @@
           text-field="name"
           :select-size="Math.max(10,accounts.length)"
         ></b-form-select>`
+
+        <b-form-select
+          v-if="selectedRepo"
+          v-model="selectedBranch"
+          :options="branches"
+          value-field="name"
+          text-field="name"
+          :select-size="Math.max(10,accounts.length)"
+        ></b-form-select>`
+        
       </b-input-group>
     </template>
 
@@ -78,8 +89,11 @@ export default Vue.extend({
     mode: <string>'memberOf',
     selectedAcct: <string>'',
     selectedRepo: <string>'',
+    defaultBranch: <string>'',
+    selectedBranch: <string>'',
     accounts: <any[]>[],
     repositories: <any[]>[],
+    branches: <string[]>[],
     root: <string>''
   }),
   computed: {
@@ -100,7 +114,8 @@ export default Vue.extend({
     
     onOpen(evt:any, modalId:string) {
       if (this.id === modalId) {
-        console.log(`onOpen: ${this.id} acct=${this.acct} repo=${this.repo} selectedAcct=${this.selectedAcct}`)
+        console.log(`onOpen: ${this.id} acct=${this.acct} repo=${this.repo} selectedAcct=${this.selectedAcct} selectedRepo=${this.selectedRepo}`)
+        if (this.isLoggedIn) this.getMyRepositories()
       }
     },
 
@@ -127,7 +142,7 @@ export default Vue.extend({
     async getMyRepositories() {
       if (this.isLoggedIn) {
         this.accounts = await this.getAccounts()
-        this.selectedAcct = this.selectedAcct || this.accounts[0].login
+        this.selectedAcct = this.selectedAcct || this.acct || this.accounts[0].login
         this.repositories = await this.getRepositories(this.selectedAcct)
       }
     },
@@ -136,6 +151,8 @@ export default Vue.extend({
       (this as any).$bvModal.hide(this.id)
       this.$store.commit(`set${this.toTitleCase(this.role)}Acct`, this.selectedAcct)
       this.$store.commit(`set${this.toTitleCase(this.role)}Repo`, this.selectedRepo)
+      console.log(`submit: role=${this.role} selectedBranch=${this.selectedBranch} defaultBranch=${this.defaultBranch}`)
+      this.$store.commit(`set${this.toTitleCase(this.role)}Ref`, this.selectedBranch === this.defaultBranch ? '' : this.selectedBranch)
       this.$store.commit(`set${this.toTitleCase(this.role)}Path`, '')
       // let path = `/${[this.root,this.acct,this.repo].filter(pe => pe).join('/')}`
       // this.$router.push({path})
@@ -155,7 +172,7 @@ export default Vue.extend({
     isLoggedIn: {
       async handler(isLoggedIn) {
         this.mode = isLoggedIn ? 'memberOf' : 'any'
-        if (isLoggedIn) this.getMyRepositories()
+        // if (isLoggedIn) this.getMyRepositories()
       },
       immediate: true
     },
@@ -164,7 +181,7 @@ export default Vue.extend({
       async handler() {
         this.selectedAcct = this.acct
       },
-      immediate: true
+      immediate: false
     },
 
     selectedAcct: {
@@ -172,14 +189,30 @@ export default Vue.extend({
         if (this.selectedAcct)
           this.repositories = await this.getRepositories(this.selectedAcct)
       },
-      immediate: true
+      immediate: false
     },
   
     repositories() {
+      console.log(this.repositories)
       this.selectedRepo = this.repositories.length
-        ? (this.repositories.find((repo:any) => defaultsForRole[this.role].has(repo.name.toLowerCase())) || this.repositories[0]).name
+        ? this.selectedAcct === this.acct
+          ? this.repo
+          : (this.repositories.find((repo:any) => defaultsForRole[this.role].has(repo.name.toLowerCase())) || this.repositories[0]).name
         : ''
-    }
+    },
+
+    selectedRepo() {
+      this.defaultBranch = this.repositories.find((repo:any) => repo.name === this.selectedRepo).default_branch
+      this.githubClient.branches(this.selectedAcct, this.selectedRepo)
+        .then((branches:any[]) => this.branches = branches.map((item:any) => item.name))
+    },
+
+    branches() {
+      this.selectedBranch = this.branches.length
+        ? this.branches.find((branch:string) => branch === this.defaultBranch) || this.branches[0]
+        : ''
+    },
+
   }
 })
 
