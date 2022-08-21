@@ -146,7 +146,7 @@ export default Vue.extend({
             this.insertAtCursor(cursorPos, `.ve-image ${decodeURIComponent(imageId)}\n`)
         } else {
           this.getManifestUrl(url).then((manifestUrl:string) => {
-            let imageId = manifestUrl.split('/').slice(3,-1).join('/')
+            let imageId = manifestUrl.split('#')[0].split('/').slice(3,-1).join('/')
             if (cursorPos.line === 0) {
               this.insertAtCursor(cursorPos, `.ve-header "File Title" ${imageId}\n`)
             } else {
@@ -169,7 +169,7 @@ export default Vue.extend({
           this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
         } else {
           this.getManifestUrl(pastedText).then((manifestUrl:string) => {
-            let imageId = manifestUrl.split('/').slice(3,-1).join('/')
+            let imageId = manifestUrl.split('#')[0].split('/').slice(3,-1).join('/')
             this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
           })
         }
