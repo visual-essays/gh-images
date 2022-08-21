@@ -1,27 +1,23 @@
 <template>
-  <div class="main">
+  <div class="content-path">
 
-    <div class="path">
-      <div class="repo-selector" v-if="acct" 
-        @click="selectRepository"
-        v-b-tooltip.hover :title="isMobile ? '' : 'Select Repository'">
-        <span v-html="acct"></span>:
-        <span v-html="repo"></span>
-        <span v-if="ref"> ({{ref}})</span>
-      </div>
-      <div v-else>
-        <div class="repo-selector" @click="selectRepository">Select Repository</div>
-      </div>
-
-      <div class="breadcrumb">
-        <b-breadcrumb v-if="acct">
-          <b-breadcrumb-item v-for="item, idx in breadCrumbs" :key="`bc-${idx}`" 
-            @click="selectFile(item)"
-            :html="item.text"
-          ></b-breadcrumb-item>
-        </b-breadcrumb>
-      </div>
+    <div class="repo-selector" v-if="acct" 
+      @click="selectRepository"
+      v-b-tooltip.hover :title="isMobile ? '' : 'Select Repository'">
+      <span v-html="acct"></span>:
+      <span v-html="repo"></span>
+      <span v-if="ref"> ({{ref}})</span>
     </div>
+    <div v-else>
+      <div class="repo-selector" @click="selectRepository">Select Repository</div>
+    </div>
+
+    <b-breadcrumb v-if="acct">
+      <b-breadcrumb-item v-for="item, idx in breadCrumbs" :key="`bc-${idx}`" 
+        @click="selectFile(item)"
+        :html="item.text"
+      ></b-breadcrumb-item>
+    </b-breadcrumb>
 
   </div>
 </template>
@@ -50,7 +46,8 @@ export default Vue.extend({
     isMobile(): boolean {return this.$store.state.isMobile},
     breadCrumbs(): any[] {
       let root = ''
-      let breadCrumbs = [{text: 'root', to: root}]
+      // let breadCrumbs = [{text: 'root', to: root}]
+      let breadCrumbs = []
       let pathElems = this.contentPath.split('/').filter(pe => pe)
       for (let i = 0; i < pathElems.length; i++) {
         breadCrumbs.push({text: pathElems[i], to: `/${pathElems.slice(0,i+1).join('/')}`})
@@ -65,9 +62,9 @@ export default Vue.extend({
     console.log('contentPath.mounted')
     this.$root.$on('github-path-changed', (path: string) => {
       console.log(`github-path-changed: tool=${this.tool} path=${path}`)
-      path = path.replace(/\/README\.md$/,'').replace(/\.md$/,'')
       this.$store.commit(`set${this.toolTitleCase}ContentPath`, path)
-      this.$router.push({path: `/${this.baseRoute}/${this.acct}/${this.repo}/${path}`, query: {ref: this.ref}})
+      //path = path.replace(/\/README\.md$/,'').replace(/\.md$/,'')
+      //this.$router.push({path: `/${this.baseRoute}/${this.acct}/${this.repo}/${path}`, query: this.ref ? {ref: this.ref} : {} })
     })
     
     let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
@@ -166,50 +163,43 @@ export default Vue.extend({
 
 <style scoped>
 
-  .main {
-    position: fixed;
-    width: 100%;
-    background-color: white;
-    display: flex;
-    flex-direction: column;
-    padding: 6px;
-    align-items: flex-start;
-    z-index: 10;
-  }
-
-  .path {
+  .content-path {
     display: flex;
     align-items: center;
-    padding: 6px;
+    width: 100%;
+    background-color: white;
+    padding: 0px 6px;
+    z-index: 10;
   }
 
   .repo-selector {
     cursor: pointer;
+    background-color: #ddd;
+    padding: 6px;
   }
   .repo-selector:hover {
     text-decoration: underline;
   }
   .repo-selector span {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   .breadcrumb {
-    display: flex;
-    align-items: center;
     margin: 0;
-    height: 40px;
-    padding: 0 0 0 18px;
+    padding: 0 0 0 12px;
     background-color: white;
   }
 
   /* Mobile Devices */
   @media (max-width: 480px) {
 
+    /*
     .path, .breadcrumb {
       flex-direction: column;
       align-items: unset;
       padding: 0;
     }
+    */
 
   }
 

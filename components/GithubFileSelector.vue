@@ -39,7 +39,7 @@
     <template #modal-footer="{ cancel }">
       <div class="w-100">
         <b-button class="float-left" size="sm" variant="primary" @click="openDialog">New File</b-button>
-        <b-button class="float-right" size="sm" variant="primary" @click="select">Select</b-button>
+        <b-button :disabled="!selectedFile" class="float-right" size="sm" variant="primary" @click="select">Select</b-button>
         <b-button class="float-right" size="sm" style="margin-right:12px;" @click="cancel()">Cancel</b-button>
       </div>
     </template>
@@ -100,6 +100,7 @@ export default Vue.extend({
 
     onOpen(evt:any, modalId:string) {
       if (modalId === this.id) {
+        this.selectedFile = ''
         this.update(this.path)
       }
     },

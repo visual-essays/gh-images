@@ -48,8 +48,10 @@ export class GithubClient {
   }
 
   async getFile(acct:string, repo:string, path:string, ref:string): Promise<any> {
+    console.log(`getFile: acct=${acct} repo=${repo} ref=${ref} path=${path}`)
     let content
     let url = `https://api.github.com/repos/${acct}/${repo}/contents${path}`
+    console.log(url)
     if (ref) url += `?ref=${ref}`
     let resp: any = await fetch(url, {headers: {Authorization:`Token ${this.authToken}`}})
     if (resp.ok) {

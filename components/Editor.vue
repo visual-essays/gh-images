@@ -2,6 +2,7 @@
   <div id="editor" ref="editor" @paste="paste" @drop="drop" @dragover.prevent @dragover="overDropzone=true" @dragleave="overDropzone=false" :class="{overDropzone}">
 
     <div class="controls">
+      
       <content-path></content-path>
 
       <div class="buttons">
@@ -13,6 +14,10 @@
         <span @click="togglePreview" v-b-tooltip.hover :title="isMobile ? '' : 'Toggle Essay Preview'"><fa :icon="previewIcon"></fa></span>
       </div>
     </div>
+
+    <b-toast id="essay-saved" title="" solid auto-hide-delay="1000" no-close-button><b>Essay saved to Github</b></b-toast>
+    <b-toast id="link-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Link copied to clipboard</b></b-toast>
+    <b-toast id="text-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Essay text copied to clipboard</b></b-toast>
 
     <textarea v-cloak ref="content"></textarea>
 
@@ -206,17 +211,18 @@ export default Vue.extend({
       console.log('saveFile', this.contentPath)
       if (this.isLoggedIn) {
         let markdown = this.simplemde.value()
-        let status = await this.githubClient.putFile(this.acct, this.repo, this.contentPath, markdown, this.sha, this.ref)
-        console.log(status)
+        await this.githubClient.putFile(this.acct, this.repo, this.contentPath, markdown, this.sha, this.ref)
+        ;(this as any).$bvToast.show('essay-saved')
       }
     },
   
     copyLink() {
-      console.log('copyLink')
+      (this as any).$bvToast.show('link-copied')
     },
   
     copyText() {
       navigator.clipboard.writeText(this.simplemde.value())
+      ;(this as any).$bvToast.show('text-copied')
     },
   
     launch() {
@@ -281,11 +287,10 @@ export default Vue.extend({
 
     contentPath: {
       async handler (contentPath) {
-        console.log(`${this.$options.name}.watch.contentPath`)
+        console.log(`${this.$options.name}.watch.contentPath`, contentPath)
         let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
         window.history.replaceState({}, '', `/${path}`)
         let resp = await this.githubClient.getFile(this.acct, this.repo, contentPath, this.ref)
-        console.log(resp)
         this.content = resp.content
         this.sha = resp.sha
       },
@@ -305,7 +310,6 @@ export default Vue.extend({
     },
 
     content(markdown) {
-      console.log('content', markdown)
       this.simplemde.value(markdown)
     },
 
@@ -340,6 +344,14 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
 
   .preview .editor-preview {
     padding: 0;
+  }
+
+  /* Mobile Devices */
+  @media (max-width: 480px) {
+
+    .CodeMirror {
+      height: calc(100vh - 280px);
+    }
   }
 
 </style>
@@ -383,42 +395,45 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
 
   .controls {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    background-color: white;
+    padding-top: 6px;
+    /* align-items: center; */
   }
 
   .buttons {
-    padding: 12px;
-    padding-top: 78px;
+    padding: 6px 12px;
     display: flex;
-    gap: 9px;
+    gap: 15px;
     margin-left: auto;
-    font-size: 20px;
+    font-size: 22px;
+  }
+  .buttons span {
+    cursor: pointer;
   }
 
-  .preview .fab {
+  .fab {
+    display: none;
     position: fixed;
     right: 10px;
     bottom: 70px;
-    font-weight: bold;
-    font-size: 1.2rem;
     z-index: 10;
+    width: 30px;
+		height: 30px;
+		border-radius: 15px;
+		font-size: 20px;
+    font-weight: bold;
+		text-align: center;
+    padding: 0;
+  }
+
+  .preview .fab {
+    display: inline-block;
   }
 
   /* Mobile Devices */
   @media (max-width: 480px) {
-
-    .CodeMirror {
-      height: calc(100vh - 280px);
-    }
-
-    .controls {
-      flex-direction: column;
-      align-items: unset;
-    }
-
-    main {
-      padding: 0;
-    }
 
   }
 
