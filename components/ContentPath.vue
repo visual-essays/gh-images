@@ -167,10 +167,14 @@ export default Vue.extend({
 <style scoped>
 
   .main {
+    position: fixed;
+    width: 100%;
+    background-color: white;
     display: flex;
     flex-direction: column;
     padding: 6px;
     align-items: flex-start;
+    z-index: 10;
   }
 
   .path {

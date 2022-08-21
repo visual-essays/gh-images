@@ -1,6 +1,6 @@
 <template>
   <div>
-    <depicted></depicted>
+    
   </div>
 </template>
 
@@ -9,7 +9,8 @@
 import Vue from 'vue'
 
 export default Vue.extend({
-  name: 'DepictedPage',
+  name: 'PWA',
+  layout: 'pwa',
   data: () => ({}),
   computed: {},
   async created() {},
@@ -21,4 +22,6 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+
+
 </style>

@@ -310,8 +310,8 @@ export default Vue.extend({
     },
 
     isPreviewActive(isActive) {
-      if (isActive) (this.$refs.editor as HTMLElement)?.classList.add('preview')
-      else (this.$refs.editor as HTMLElement)?.classList.remove('preview')
+      if (isActive) (document.getElementById('__layout') as HTMLElement)?.classList.add('preview')
+      else (document.getElementById('__layout') as HTMLElement)?.classList.remove('preview')
     }
 
 }
@@ -326,10 +326,15 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
     height: calc(100vh - 200px);
   }
 
+  main {
+    padding: 0 !important;
+  }
+
   .preview .CodeMirror {
     height: 100vh;
   }
-  .preview .editor-toolbar {
+  .preview .editor-toolbar,
+  .preview .editor-statusbar {
     display: none;
   }
 
@@ -383,6 +388,7 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
 
   .buttons {
     padding: 12px;
+    padding-top: 78px;
     display: flex;
     gap: 9px;
     margin-left: auto;
@@ -392,7 +398,7 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
   .preview .fab {
     position: fixed;
     right: 10px;
-    bottom: 10px;
+    bottom: 70px;
     font-weight: bold;
     font-size: 1.2rem;
     z-index: 10;
