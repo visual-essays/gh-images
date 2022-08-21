@@ -19,7 +19,7 @@
     <b-toast id="link-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Link copied to clipboard</b></b-toast>
     <b-toast id="text-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Essay text copied to clipboard</b></b-toast>
 
-    <textarea v-cloak ref="content"></textarea>
+    <textarea v-cloak ref="content" autocomplete="off"></textarea>
 
     <b-button pill class="fab" variant="primary" @click="togglePreview">+</b-button>
 
