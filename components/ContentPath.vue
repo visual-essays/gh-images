@@ -61,7 +61,7 @@ export default Vue.extend({
     this.$root.$on('github-path-changed', (path: string) => {
       console.log(`github-path-changed: tool=${this.tool} path=${path}`)
       this.$store.commit(`set${this.toolTitleCase}ContentPath`, path)
-      //path = path.replace(/\/README\.md$/,'').replace(/\.md$/,'')
+      this.$store.commit(`set${this.toolTitleCase}Path`, path.replace(/^\//,'').replace(/\/?README\.md$/,'').replace(/\.md$/,''))
       //this.$router.push({path: `/${this.baseRoute}/${this.acct}/${this.repo}/${path}`, query: this.ref ? {ref: this.ref} : {} })
     })
     
