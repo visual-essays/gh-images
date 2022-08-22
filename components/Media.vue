@@ -88,7 +88,7 @@ export default Vue.extend({
   .fab {
     position: fixed;
     right: 10px;
-    bottom: 10px;
+    bottom: 70px;
     font-weight: bold;
     font-size: 1.2rem;
   }
