@@ -16,7 +16,7 @@
     </div>
 
     <b-toast id="essay-saved" title="" solid auto-hide-delay="1000" no-close-button><b>Essay saved to Github</b></b-toast>
-    <b-toast id="link-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Link copied to clipboard</b></b-toast>
+    <b-toast id="link-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Link copied to clipboard:</b>&nbsp;{{link}}</b-toast>
     <b-toast id="text-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Essay text copied to clipboard</b></b-toast>
 
     <textarea v-cloak ref="content" autocomplete="off"></textarea>
@@ -72,6 +72,7 @@ export default Vue.extend({
     authToken(): string {return this.$store.state.authToken},
     isLoggedIn() {return this.$store.state.authToken !== ''},
     isMobile(): string {return this.$store.state.isMobile},
+    link(): string {return `${webappHost}/${this.acct}/${this.repo}/${this.path}${this.ref ? '?ref='+this.ref : ''}`},
     githubClient() {return this.$store.state.githubClient},
     
     launchIcon() { return faArrowUpRightFromSquare },
@@ -218,7 +219,8 @@ export default Vue.extend({
     },
   
     copyLink() {
-      (this as any).$bvToast.show('link-copied')
+      navigator.clipboard.writeText(this.link)
+      ;(this as any).$bvToast.show('link-copied')
     },
   
     copyText() {
@@ -227,9 +229,7 @@ export default Vue.extend({
     },
   
     launch() {
-      let url = `${webappHost}/${this.acct}/${this.repo}/${this.path}`
-      if (this.ref) url += `?ref=${this.ref}`
-      window.open(url, '_blank')
+      window.open(this.link, '_blank')
     },
   
     openWindow(url:string, options:any) {
