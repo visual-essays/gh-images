@@ -196,11 +196,12 @@ export default Vue.extend({
             }
             if (tags.DateTime) data.created = tags.DateTime
             if (tags.Orientation) data.orientation = tags.Orientation
+            
             // if (tags.PixelXDimension) data.width = tags.PixelXDimension
             // if (tags.PixelYDimension) data.height = tags.PixelYDimension
             // if (tags.Model) data.model = tags.Model
           }
-          resolve(data)
+          resolve(tags)
         })
       })
     }
