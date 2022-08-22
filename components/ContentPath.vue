@@ -14,7 +14,7 @@
 
     <b-breadcrumb v-if="acct">
       <b-breadcrumb-item v-for="item, idx in breadCrumbs" :key="`bc-${idx}`" 
-        @click="selectFile(item)"
+        @click="selectFile(item, idx)"
         :html="item.text"
       ></b-breadcrumb-item>
     </b-breadcrumb>
@@ -45,9 +45,7 @@ export default Vue.extend({
     githubClient(): any {return this.$store.state.githubClient},
     isMobile(): boolean {return this.$store.state.isMobile},
     breadCrumbs(): any[] {
-      let root = ''
-      // let breadCrumbs = [{text: 'root', to: root}]
-      let breadCrumbs = []
+      let breadCrumbs = this.tool === 'essays' ? [] : [{text: 'root', to: ''}]
       let pathElems = this.contentPath.split('/').filter(pe => pe)
       for (let i = 0; i < pathElems.length; i++) {
         breadCrumbs.push({text: pathElems[i], to: `/${pathElems.slice(0,i+1).join('/')}`})
@@ -98,7 +96,7 @@ export default Vue.extend({
   },
   methods: {
 
-    selectFile(item:any) {
+    selectFile(item:any, idx:number) {
       console.log('selectFile', this.tool, item)
       if (this.tool === 'media') {
         this.$router.push({path: `/${this.tool}/${this.root}${item.to}`})

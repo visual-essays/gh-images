@@ -90,7 +90,6 @@ export default Vue.extend({
     fileExtension: <string>'',
     summary: <string>'',
     imageUrl: '',
-    ref: '',
     exifData: <any>{}
   }),
   computed: {
