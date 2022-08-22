@@ -8,8 +8,8 @@
     <template #default="{ hide }">
     <b-overlay :show="busy" rounded="sm">
 
-      <div>
-        <img v-if="imageUrl" ref="img" style="padding-left:16px; height:150px" :src="imageUrl">
+      <div :style="`height:${imageUrl ? 150 : 0}px;`">
+        <img ref="img" style="padding-left:16px; height:100%;" :src="imageUrl">
       </div>
 
       <b-container v-if="file.name" fluid="sm" class="image-data">
