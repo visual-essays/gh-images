@@ -200,7 +200,7 @@ export default Vue.extend({
             // if (tags.PixelYDimension) data.height = tags.PixelYDimension
             // if (tags.Model) data.model = tags.Model
           }
-          resolve(tags)
+          resolve(data)
         })
       })
     }
