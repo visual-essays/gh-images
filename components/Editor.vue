@@ -212,7 +212,7 @@ export default Vue.extend({
       console.log('saveFile', this.contentPath)
       if (this.isLoggedIn) {
         let markdown = this.simplemde.value()
-        await this.githubClient.putFile(this.acct, this.repo, this.contentPath, markdown, this.sha, this.ref)
+        await this.githubClient.putFile(this.acct, this.repo, this.contentPath, markdown, this.ref, this.sha)
         ;(this as any).$bvToast.show('essay-saved')
       }
     },

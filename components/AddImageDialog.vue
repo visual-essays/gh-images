@@ -9,10 +9,10 @@
     <b-overlay :show="busy" rounded="sm">
 
       <div>
-        <img v-if="imageUrl" ref="img" style="padding-left:16px; height:150px" :src="imageUrl">
+        <img ref="img" style="padding-left:16px; height:150px" :src="imageUrl">
       </div>
 
-      <b-container v-if="file.name" fluid class="image-data">
+      <b-container v-if="file.name" fluid="sm" class="image-data">
         <b-row>
           <b-col sm="3" class="label"><label for="folder">Folder:</label></b-col>
           <b-col sm="9" class="value">
@@ -21,7 +21,7 @@
           </b-col>
         </b-row>
         <b-row>
-          <b-col sm="3" class="label"><label for="fname">Name:</label></b-col>
+          <b-col sm="3" class="label"><label for="fname">Name</label></b-col>
           <b-col sm="9" class="value">
             <b-form-input 
               ref="fname"
@@ -35,7 +35,7 @@
           </b-col>
         </b-row>
         <b-row>
-          <b-col sm="3" class="label"><label for="summary">Summary:</label></b-col>
+          <b-col sm="3" class="label"><label for="summary">Summary</label></b-col>
           <b-col sm="9" class="value">
             <b-form-input
               ref="summary"
@@ -47,8 +47,12 @@
             ></b-form-input>
           </b-col>
         </b-row>
+        <b-row v-for="value, key in exifData" :key="key" style="flex-wrap:nowrap;">
+          <b-col sm="3" class="label" v-html="key" style="width:unset;"></b-col>
+          <b-col sm="9" class="value" v-html="value"></b-col>
+        </b-row>
         <b-row>
-          <b-col sm="12">
+          <b-col sm="12" style="padding-left:0;">
             <depicted></depicted>
           </b-col>
         </b-row>
@@ -86,12 +90,14 @@ export default Vue.extend({
     fileExtension: <string>'',
     summary: <string>'',
     imageUrl: '',
-    ref: ''
+    ref: '',
+    exifData: <any>{}
   }),
   computed: {
-    acct(): string {return this.$store.state.acct},
-    repo(): string {return this.$store.state.repo},
-    path(): string {return this.$store.state.path},
+    acct(): string {return this.$store.state.mediaAcct},
+    repo(): string {return this.$store.state.mediaRepo},
+    ref(): string {return this.$store.state.mediaRef},
+    path(): string {return this.$store.state.mediaPath},
     isLoggedIn() {return this.$store.state.authToken !== ''},
     githubClient() {return this.$store.state.githubClient},
     dirs() {return this.dirList.filter(item => item.type === 'dir').map(item => item.name)},
@@ -110,10 +116,14 @@ export default Vue.extend({
       if (filePicker && filePicker.files && filePicker.files.length > 0) {
         this.file = filePicker.files[0]
         let parts: string[] = this.file.name.split('.')
-        // this.fileName = parts.slice(0,-1).join('.')
         this.fileExtension = parts.slice(-1)[0].toLowerCase()
         let urlCreator = window.URL || window.webkitURL
+        let imageEl = this.$refs.img as HTMLImageElement
+        imageEl.onload = () => {
+          this.getExifTags().then(data => this.exifData = data)
+        }
         this.imageUrl = urlCreator.createObjectURL(this.file)
+        
       }
     },
 
@@ -144,9 +154,9 @@ export default Vue.extend({
         const base64data = reader.result 
         let fileName = this.fileName.replace(/ /g, '_')
         let path = [...this.folder.split('/').filter(pe => pe), ...[fileName]].join('/')
-        await this.githubClient.putFile(this.acct, this.repo, `${path}.${this.fileExtension}`, base64data)
+        await this.githubClient.putFile(this.acct, this.repo, `${path}.${this.fileExtension}`, base64data, this.ref)
         if (Object.keys(metadata))
-          await this.githubClient.putFile(this.acct, this.repo, `${path}.yaml`, yaml.dump(metadata));
+          await this.githubClient.putFile(this.acct, this.repo, `${path}.yaml`, yaml.dump(metadata), this.ref);
         ;(this as any).$bvModal.hide('add-image')
       }
       reader.readAsBinaryString(this.file)
@@ -226,7 +236,12 @@ export default Vue.extend({
   }
   .image-data .label {
     font-weight: bold;
-  }  
+    padding-left: 0;
+  }
+  .image-data .label::after {
+    font-weight: bold; 
+    content: ":";
+  }
   .image-data .value {
     display: flex;
     padding-left: 0;

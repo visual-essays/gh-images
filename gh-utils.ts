@@ -61,12 +61,22 @@ export class GithubClient {
     return Promise.resolve({content, sha: resp.sha})
   }
 
-  async putFile(acct:string, repo:string, path:string, content:any, sha:string, ref:string): Promise<any> {
-    console.log(`putFile: acct=${acct} repo=${repo} ref=${ref} path=${path}`)
+  async getSha(acct:string, repo:string, path:string, ref:string): Promise<any> {
+    console.log(`sha: acct=${acct} repo=${repo} path=${path} ref=${ref}`)
     let url = `https://api.github.com/repos/${acct}/${repo}/contents/${path}`
     if (ref) url += `?ref=${ref}`
-    console.log(url)
-    let payload = { message: 'API commit', ref: ref, content: btoa(content), sha }
+    let resp:any = await fetch(url, { headers: {Authorization: `Token ${this.authToken}`} })
+    if (resp.ok) return await resp.json().sha
+  }
+
+
+  async putFile(acct:string, repo:string, path:string, content:any, ref:string, sha:string): Promise<any> {
+    console.log(`putFile: acct=${acct} repo=${repo} path=${path} ref=${ref} sha=${sha}`)
+    let url = `https://api.github.com/repos/${acct}/${repo}/contents/${path}`
+    if (ref) url += `?ref=${ref}`
+    sha = sha || await this.getSha(acct, repo, path, ref)
+    let payload:any = { message: 'API commit', ref: ref, content: btoa(content) }
+    if (sha) payload.sha = sha
     let resp = await fetch(url, { method: 'PUT', body: JSON.stringify(payload), headers: {Authorization: `Token ${this.authToken}`} })
     resp = await resp.json()
   }
