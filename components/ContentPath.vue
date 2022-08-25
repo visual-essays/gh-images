@@ -66,7 +66,7 @@ export default Vue.extend({
     })
     
     let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
-    this.$store.commit(`set${this.toolTitleCase}Path`, pathElems.length > 2 ? pathElems.slice(2).join('/') : this.path)
+    this.$store.commit(`set${this.toolTitleCase}Path`, pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
     if (pathElems.length > 0) this.$store.commit(`set${this.toolTitleCase}Acct`, pathElems[0])
     if (pathElems.length > 1) this.$store.commit(`set${this.toolTitleCase}Repo`, pathElems[1])
     
@@ -75,14 +75,13 @@ export default Vue.extend({
 
     this.$store.commit(`set${this.toolTitleCase}DirList`, [])
 
-
-    this.githubClient.fullPath(this.acct, this.repo, this.path, null, this.tool === 'media')
+    this.githubClient.fullPath(this.acct, this.repo, this.path, this.ref, this.tool === 'media')
       .then((contentPath:string) => {
         this.$store.commit(`set${this.toolTitleCase}ContentPath`, contentPath)
         return contentPath
       })
       .then((contentPath:string) => {
-        this.githubClient.dirlist(this.acct, this.repo, contentPath)
+        this.githubClient.dirlist(this.acct, this.repo, contentPath, this.ref)
         .then((dirList:any[]) => this.$store.commit(`set${this.toolTitleCase}DirList`, dirList))
       })
     
@@ -126,7 +125,7 @@ export default Vue.extend({
     path: {
       async handler(repo) {
         console.log(`${this.$options.name}.watch.path: path=${this.path}`)
-        if (repo) this.$store.commit(`set${this.toolTitleCase}ContentPath`, await this.githubClient.fullPath(this.acct, this.repo, this.path, null, this.tool === 'media')) 
+        if (repo) this.$store.commit(`set${this.toolTitleCase}ContentPath`, await this.githubClient.fullPath(this.acct, this.repo, this.path, this.ref, this.tool === 'media')) 
       },
       immediate: false
     },
@@ -134,11 +133,11 @@ export default Vue.extend({
     contentPath: {
       async handler() {
         console.log(`${this.$options.name}.watch.root: contentPath=${this.contentPath}`)
-        //let dirList = await this.githubClient.dirlist(this.acct, this.repo, this.contentPath)
+        //let dirList = await this.githubClient.dirlist(this.acct, this.repo, this.contentPath, this.ref)
         //this.dirs = dirList.filter((item:any) => item.type === 'dir')
         //.map((item:any) => `/${this.tool}/${this.acct}/${this.repo}/${this.contentPath}/${item.name}`)  
         
-        this.$store.commit(`set${this.toolTitleCase}DirList`, await this.githubClient.dirlist(this.acct, this.repo, this.contentPath))
+        this.$store.commit(`set${this.toolTitleCase}DirList`, await this.githubClient.dirlist(this.acct, this.repo, this.contentPath, this.ref))
         console.log('dirList', this.dirList)
         //let path = ['media', this.acct, this.repo, ...this.contentPath.split('/')].filter(pe => pe).join('/')
         //window.history.replaceState({}, '', `/${path}`)

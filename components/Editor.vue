@@ -170,8 +170,11 @@ export default Vue.extend({
           this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
         } else {
           this.getManifestUrl(pastedText).then((manifestUrl:string) => {
-            let imageId = manifestUrl.split('/').slice(3,-1).join('/')
-            this.simplemde.codemirror.replaceSelection(`\n.ve-image ${decodeURIComponent(imageId)}\n`)
+            manifestUrl = manifestUrl.indexOf(iiifEndpoint) === 0
+              ? decodeURIComponent(manifestUrl.split('/').slice(3,-1).join('/'))
+              : manifestUrl
+            let viewer = manifestUrl.indexOf('youtube.com') > 0 ? 'video' : 'image'
+            this.simplemde.codemirror.replaceSelection(`\n.ve-${viewer} ${manifestUrl}\n`)
           })
         }
       } else {
@@ -290,7 +293,7 @@ export default Vue.extend({
       async handler (contentPath) {
         console.log(`${this.$options.name}.watch.contentPath`, contentPath)
         let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/?README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
-        window.history.replaceState({}, '', `/${path}`)
+        window.history.replaceState({}, '', `/${path}${this.ref ? '?ref='+this.ref : ''}`)
         let resp = await this.githubClient.getFile(this.acct, this.repo, contentPath, this.ref)
         this.content = resp.content
         this.sha = resp.sha

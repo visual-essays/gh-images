@@ -50,9 +50,9 @@ export class GithubClient {
   async getFile(acct:string, repo:string, path:string, ref:string): Promise<any> {
     console.log(`getFile: acct=${acct} repo=${repo} ref=${ref} path=${path}`)
     let content
-    let url = `https://api.github.com/repos/${acct}/${repo}/contents${path}`
-    console.log(url)
+    let url = `https://api.github.com/repos/${acct}/${repo}/contents/${path}`
     if (ref) url += `?ref=${ref}`
+    console.log(url)
     let resp: any = await fetch(url, {headers: {Authorization:`Token ${this.authToken}`}})
     if (resp.ok) {
       resp = await resp.json()
@@ -65,19 +65,24 @@ export class GithubClient {
     console.log(`sha: acct=${acct} repo=${repo} path=${path} ref=${ref}`)
     let url = `https://api.github.com/repos/${acct}/${repo}/contents/${path}`
     if (ref) url += `?ref=${ref}`
+    console.log(url)
     let resp:any = await fetch(url, { headers: {Authorization: `Token ${this.authToken}`} })
-    if (resp.ok) return await resp.json().sha
+    if (resp.ok) resp = await resp.json()
+    return resp.sha
   }
 
 
   async putFile(acct:string, repo:string, path:string, content:any, ref:string, sha:string): Promise<any> {
-    console.log(`putFile: acct=${acct} repo=${repo} path=${path} ref=${ref} sha=${sha}`)
     let url = `https://api.github.com/repos/${acct}/${repo}/contents/${path}`
-    if (ref) url += `?ref=${ref}`
+    let shaTest = await this.getSha(acct, repo, path, ref)
+    console.log(shaTest)
     sha = sha || await this.getSha(acct, repo, path, ref)
-    let payload:any = { message: 'API commit', ref: ref, content: btoa(content) }
+    console.log(`putFile: acct=${acct} repo=${repo} path=${path} ref=${ref} sha=${sha} shaTest=${shaTest}`)
+    let payload:any = { message: 'API commit', content: btoa(content) }
+    if (ref) payload.branch = ref
     if (sha) payload.sha = sha
     let resp = await fetch(url, { method: 'PUT', body: JSON.stringify(payload), headers: {Authorization: `Token ${this.authToken}`} })
+    console.log(resp)
     resp = await resp.json()
   }
 

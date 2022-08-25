@@ -68,6 +68,7 @@ export default Vue.extend({
     role(): string {return this.id.split('-')[0]},
     acct(): string {return this.$store.state[`${this.role}Acct`]},
     repo(): string {return this.$store.state[`${this.role}Repo`]},
+    ref(): string {return this.$store.state[`${this.role}Ref`]},
     path(): string {return this.$store.state.fileSelectorPath},
     githubClient() {return this.$store.state.githubClient},
     dirs() {return this.dirList.filter(item => item.type === 'dir').map(item => item.name)},
@@ -126,11 +127,11 @@ export default Vue.extend({
     async update(path:string) {
       path = path.split('/').filter(pe => pe).join('/')
       let pathElems = path.split('/').filter(pe => pe)
-      console.log(`${this.id}.update: acct=${this.acct} repo=${this.repo} path=${pathElems.join('/')}`)
-      let dirList: any[] = await this.githubClient.dirlist(this.acct, this.repo, pathElems.join('/'))
+      console.log(`${this.id}.update: acct=${this.acct} repo=${this.repo} path=${pathElems.join('/')} ref=${this.ref}`)
+      let dirList: any[] = await this.githubClient.dirlist(this.acct, this.repo, pathElems.join('/'), this.ref)
       if (dirList.length === 0) {
         let leaf = pathElems.pop()
-        dirList = await this.githubClient.dirlist(this.acct, this.repo, pathElems.join('/'))
+        dirList = await this.githubClient.dirlist(this.acct, this.repo, pathElems.join('/'), this.ref)
         this.dirList = dirList
         this.curDir = pathElems.filter(pe => pe).join('/')
         let found = dirList.find(item => item.type === 'file' && item.name === leaf)
@@ -145,7 +146,6 @@ export default Vue.extend({
       console.log(`update: curDir=${this.curDir}`)
       this.dirList = dirList
 
-      // this.githubClient.dirlist(this.acct, this.repo, this.curDir).then((dirList:any[]) => this.dirList = dirList)
     },
 
     async createFile() {
@@ -153,8 +153,8 @@ export default Vue.extend({
         let path: string = [...this.curDir.split('/').filter(pe => pe), ...this.newFilePath.split('/')].join('/')
         let fname = (path.split('/').pop() as string)
         let content = fname.indexOf('.md') === fname.length-3 ? `# ${fname.slice(0,-3)}` : ''
-        await this.githubClient.putFile(this.acct, this.repo, path, content)
-        this.githubClient.dirlist(this.acct, this.repo, this.curDir).then((dirList:any[]) => this.dirList = dirList)
+        await this.githubClient.putFile(this.acct, this.repo, path, content, this.ref)
+        this.githubClient.dirlist(this.acct, this.repo, this.curDir, this.ref).then((dirList:any[]) => this.dirList = dirList)
       }
     },
 
@@ -164,7 +164,7 @@ export default Vue.extend({
       this.dirList = this.dirList.filter(file => file.name !== toDelete.name)
       if (this.files.length === 0) {
         this.curDir = this.curDir.split('/').filter(pe => pe).slice(0,-1).join('/')
-        this.githubClient.dirlist(this.acct, this.repo, this.curDir).then((dirList:any[]) => this.dirList = dirList)
+        this.githubClient.dirlist(this.acct, this.repo, this.curDir, this.ref).then((dirList:any[]) => this.dirList = dirList)
       }
     }
 
