@@ -106,7 +106,7 @@ export default Vue.extend({
 
     update(path:string) {
       this.curPath = path
-      this.githubClient.dirlist(this.acct, this.repo, this.curPath, this.ref).then((dirList:any[]) => this.dirList = dirList)
+      this.githubClient.dirlist(this.acct, this.repo, this.curPath).then((dirList:any[]) => this.dirList = dirList)
     },
 
     async createFolder() {
