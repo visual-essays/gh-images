@@ -86,8 +86,8 @@ export default Vue.extend({
   created() { console.log(`${this.$options.name}.created`)},
   async mounted() {
     if (this.acct && this.repo) {
-      console.log(`essaysAcct=${this.acct} essaysRepo=${this.repo} essaysContentPath=${this.contentPath}`)
-      let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
+      console.log(`Editor.mounted: essaysAcct=${this.acct} essaysRepo=${this.repo} essaysContentPath=${this.contentPath}`)
+      // let path = ['essays', this.acct, this.repo, ...this.contentPath.replace(/\/README\.md$/,'').replace(/\.md$/,'').split('/')].filter(pe => pe).join('/')
       //window.history.replaceState({}, '', `/${path}`)
     }
     this.initEditor()
@@ -334,7 +334,7 @@ function isURL(str:string) { return /^https*:\/\//.test(str) }
   }
 
   main {
-    padding: 0 !important;
+    /* padding: 0 !important; */
   }
 
   .preview .CodeMirror {

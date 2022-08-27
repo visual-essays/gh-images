@@ -66,7 +66,7 @@ export default Vue.extend({
     })
     
     let pathElems = (this.$route.params?.pathMatch || '').split('/').filter(pe => pe)
-    this.$store.commit(`set${this.toolTitleCase}Path`, pathElems.length > 2 ? pathElems.slice(2).join('/') : '')
+    this.$store.commit(`set${this.toolTitleCase}Path`, pathElems.length > 2 ? pathElems.slice(2).join('/') : this.path)
     if (pathElems.length > 0) this.$store.commit(`set${this.toolTitleCase}Acct`, pathElems[0])
     if (pathElems.length > 1) this.$store.commit(`set${this.toolTitleCase}Repo`, pathElems[1])
     
@@ -84,7 +84,7 @@ export default Vue.extend({
         this.githubClient.dirlist(this.acct, this.repo, contentPath, this.ref)
         .then((dirList:any[]) => this.$store.commit(`set${this.toolTitleCase}DirList`, dirList))
       })
-    
+
     let browserPath = `/${this.tool}/${this.root}${this.path ? '/'+this.path : ''}`
     if (this.ref) browserPath += `?ref=${this.ref}`
     window.history.replaceState({}, '', browserPath)
