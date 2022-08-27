@@ -82,8 +82,7 @@ export class GithubClient {
     if (ref) payload.branch = ref
     if (sha) payload.sha = sha
     let resp = await fetch(url, { method: 'PUT', body: JSON.stringify(payload), headers: {Authorization: `Token ${this.authToken}`} })
-    console.log(resp)
-    resp = await resp.json()
+    return resp.status === 200
   }
 
   async deleteFile(acct:string, repo:string, path:string, sha:string): Promise<any> {

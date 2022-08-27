@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <b-toast id="essay-saved" title="" solid auto-hide-delay="1000" no-close-button><b>Essay saved to Github</b></b-toast>
+    <b-toast id="essay-saved" title="" solid auto-hide-delay="1000" no-close-button><b>Essay save to Github: {{`${saveStatus ? 'success' : 'failed'}`}}</b></b-toast>
     <b-toast id="link-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Link copied to clipboard:</b>&nbsp;{{link}}</b-toast>
     <b-toast id="text-copied" title="" solid auto-hide-delay="1000" no-close-button><b>Essay text copied to clipboard</b></b-toast>
 
@@ -56,7 +56,7 @@ export default Vue.extend({
   name: 'Editor',
   data: () => ({
     content: '',
-    sha: '',
+    saveStatus: false,
     simplemde: <any>{},
     isPreviewActive: false,
     loadedDependencies: <any[]>[],
@@ -216,7 +216,7 @@ export default Vue.extend({
       console.log('saveFile', this.contentPath)
       if (this.isLoggedIn) {
         let markdown = this.simplemde.value()
-        await this.githubClient.putFile(this.acct, this.repo, this.contentPath, markdown, this.ref, this.sha)
+        this.saveStatus = await this.githubClient.putFile(this.acct, this.repo, this.contentPath, markdown, this.ref)
         ;(this as any).$bvToast.show('essay-saved')
       }
     },
@@ -296,7 +296,6 @@ export default Vue.extend({
         window.history.replaceState({}, '', `/${path}${this.ref ? '?ref='+this.ref : ''}`)
         let resp = await this.githubClient.getFile(this.acct, this.repo, contentPath, this.ref)
         this.content = resp.content
-        this.sha = resp.sha
       },
       immediate: true
     },
